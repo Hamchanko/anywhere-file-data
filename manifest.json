@@ -1,5 +1,5 @@
 {
-  "updated": "2026-06-21T06:42:18.895Z",
+  "updated": "2026-06-21T06:43:41.870Z",
   "python": [
     {
       "name": "mysite",
@@ -9,5 +9,13 @@
       "updated": "2026-06-21T06:42:15.801Z"
     }
   ],
-  "design": []
+  "design": [
+    {
+      "name": "DESIGN",
+      "desc": "Cyver-pop",
+      "path": "data/design/DESIGN/DESIGN.md",
+      "images": [],
+      "updated": "2026-06-21T06:43:40.856Z"
+    }
+  ]
 }
