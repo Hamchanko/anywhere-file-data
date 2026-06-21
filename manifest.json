@@ -1,0 +1,13 @@
+{
+  "updated": "2026-06-21T06:42:18.895Z",
+  "python": [
+    {
+      "name": "mysite",
+      "desc": "このサイトを構築した基ファイル。",
+      "path": "data/python/mysite/",
+      "fileCount": 4,
+      "updated": "2026-06-21T06:42:15.801Z"
+    }
+  ],
+  "design": []
+}
