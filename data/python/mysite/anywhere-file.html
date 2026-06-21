@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anywhere.file // ACCESS ANYWHERE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   DESIGN TOKENS  ―  DESIGN.md (Vivit Cyber-Pop) 準拠
+   ========================================================= */
+:root{
+  /* surfaces */
+  --surface:#131313;
+  --surface-dim:#131313;
+  --surface-bright:#3a3939;
+  --surface-container-lowest:#0e0e0e;
+  --surface-container-low:#1c1b1b;
+  --surface-container:#201f1f;
+  --surface-container-high:#2a2a2a;
+  --surface-container-highest:#353534;
+  --on-surface:#e5e2e1;
+  --on-surface-variant:#e5bcc4;
+  --outline:#ac878f;
+  --outline-variant:#5c3f45;
+  /* brand */
+  --primary:#ffb1c3;
+  --on-primary:#66002c;
+  --primary-container:#ff4b89;
+  --secondary:#d3fbff;
+  --secondary-container:#00eefc;
+  --tertiary:#dfb7ff;
+  --tertiary-container:#ba6bff;
+  --error:#ffb4ab;
+  --error-container:#93000a;
+  /* signature accents */
+  --neon-lime:#CCFF00;
+  --electric-yellow:#FFF500;
+  --glitch-white:#F0F0F0;
+  --deep-void:#150020;
+  /* spacing */
+  --unit:4px;
+  --gutter:24px;
+  --margin-mobile:16px;
+  --margin-desktop:48px;
+  --slant:3deg;
+  --clip:14px; /* chamfered corner size */
+}
+
+/* =========================================================
+   RESET / BASE
+   ========================================================= */
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  background:var(--surface);
+  color:var(--on-surface);
+  font-family:'Space Grotesk',sans-serif;
+  font-size:16px;line-height:24px;
+  min-height:100vh;
+  overflow-x:hidden;
+  position:relative;
+}
+/* dot-matrix + deep-void ambient background */
+body::before{
+  content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(186,107,255,.10), transparent 42%),
+    radial-gradient(circle at 85% 80%, rgba(0,238,252,.08), transparent 45%),
+    radial-gradient(var(--surface-container-high) 1px, transparent 1px);
+  background-size:auto,auto,22px 22px;
+}
+/* scanlines overlay */
+body::after{
+  content:"";position:fixed;inset:0;z-index:9000;pointer-events:none;
+  background:repeating-linear-gradient(
+    to bottom,
+    rgba(0,0,0,0) 0px,
+    rgba(0,0,0,0) 2px,
+    rgba(0,0,0,.18) 3px,
+    rgba(0,0,0,0) 4px);
+  mix-blend-mode:multiply;opacity:.55;
+}
+.wrap{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:0 var(--margin-mobile)}
+@media(min-width:768px){.wrap{padding:0 var(--margin-desktop)}}
+
+.mono{font-family:'JetBrains Mono',monospace}
+.caps{font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:12px;line-height:16px}
+
+/* clipped-corner utility (chamfered) */
+.clipbox{
+  clip-path:polygon(
+    0 0, calc(100% - var(--clip)) 0, 100% var(--clip),
+    100% 100%, var(--clip) 100%, 0 calc(100% - var(--clip)));
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+header{position:relative;z-index:2;padding-top:28px;padding-bottom:18px}
+.hud-top{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:12px;flex-wrap:wrap;margin-bottom:18px;
+}
+.hud-chip{
+  background:#000;color:var(--neon-lime);
+  border:1px solid var(--outline-variant);
+  padding:6px 10px;display:inline-flex;align-items:center;gap:8px;
+}
+.hud-chip.cyan{color:var(--secondary-container)}
+.hud-chip.pink{color:var(--primary)}
+.led{width:8px;height:8px;background:var(--neon-lime);display:inline-block;box-shadow:0 0 8px var(--neon-lime);animation:blink 1.6s steps(1) infinite}
+.hud-chip.cyan .led{background:var(--secondary-container);box-shadow:0 0 8px var(--secondary-container)}
+@keyframes blink{0%,70%{opacity:1}71%,100%{opacity:.25}}
+
+/* SVG glitch logo */
+.logo-stage{position:relative;line-height:0}
+.logo-stage svg{width:100%;max-width:760px;height:auto;display:block}
+.glitch-layer{animation:none}
+.layer-cyan{animation:shiftCyan 4.2s infinite steps(40)}
+.layer-pink{animation:shiftPink 3.4s infinite steps(40)}
+@keyframes shiftCyan{0%,92%,100%{transform:translate(0,0)}93%{transform:translate(-4px,1px)}96%{transform:translate(3px,-1px)}}
+@keyframes shiftPink{0%,90%,100%{transform:translate(0,0)}91%{transform:translate(4px,-1px)}94%{transform:translate(-3px,1px)}}
+.tagline{margin-top:10px;color:var(--on-surface-variant);max-width:640px}
+.tagline b{color:var(--secondary-container);font-weight:700}
+
+/* =========================================================
+   TABS
+   ========================================================= */
+.tabbar{
+  display:flex;align-items:flex-end;gap:6px;margin-top:26px;
+  border-bottom:3px solid var(--glitch-white);
+  flex-wrap:wrap;
+}
+.tab{
+  font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;font-size:13px;color:var(--on-surface-variant);
+  background:var(--surface-container-low);
+  border:2px solid var(--outline-variant);border-bottom:none;
+  padding:11px 20px;cursor:pointer;position:relative;top:3px;
+  clip-path:polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+  transition:background .12s,color .12s,transform .08s;
+}
+.tab:hover{color:var(--glitch-white);background:var(--surface-container)}
+.tab:focus-visible{outline:2px solid var(--secondary-container);outline-offset:2px}
+.tab .dot{color:var(--secondary-container)}
+.tab.active{
+  background:var(--primary-container);color:#000;border-color:var(--primary-container);
+  box-shadow:0 -3px 0 0 var(--secondary-container);
+}
+.tab.active .dot{color:var(--deep-void)}
+
+/* =========================================================
+   ACTION BAR (upload)
+   ========================================================= */
+.actionbar{
+  display:flex;justify-content:space-between;align-items:center;gap:14px;
+  flex-wrap:wrap;margin:22px 0 18px;
+}
+.context-label{display:flex;flex-direction:column;gap:4px}
+.context-label .ctx-mode{font-family:'Anton',sans-serif;font-size:26px;letter-spacing:.04em;text-transform:uppercase;color:var(--glitch-white)}
+.context-label .ctx-mode .em{color:var(--primary)}
+.context-label small{color:var(--outline)}
+
+.btn-upload{
+  --bg:var(--neon-lime);
+  font-family:'JetBrains Mono',monospace;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;font-size:14px;color:#000;cursor:pointer;
+  background:var(--bg);border:none;padding:15px 26px;
+  display:inline-flex;align-items:center;gap:10px;position:relative;
+  clip-path:polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  box-shadow:7px 7px 0 0 var(--secondary-container);
+  transition:transform .08s, box-shadow .08s, background .1s;
+}
+.btn-upload:hover{transform:translate(-2px,-2px);box-shadow:9px 9px 0 0 var(--secondary-container)}
+.btn-upload:active{transform:translate(3px,3px);box-shadow:2px 2px 0 0 var(--secondary-container)}
+.btn-upload:focus-visible{outline:3px solid var(--glitch-white);outline-offset:3px}
+.btn-upload .arrow{font-size:16px}
+.btn-upload.glitching{animation:btnGlitch .3s steps(2) 2}
+@keyframes btnGlitch{0%{background:var(--primary)}50%{background:var(--secondary-container)}100%{background:var(--neon-lime)}}
+
+/* =========================================================
+   PANELS
+   ========================================================= */
+.panel{display:none;animation:panelIn .25s ease}
+.panel.active{display:block}
+@keyframes panelIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* empty state */
+.empty{
+  border:2px dashed var(--outline-variant);
+  background:
+    repeating-linear-gradient(45deg, transparent, transparent 12px, rgba(186,107,255,.04) 12px, rgba(186,107,255,.04) 24px);
+  padding:48px 24px;text-align:center;color:var(--outline);
+  transition:border-color .15s, background .15s;
+}
+.empty.drag{border-color:var(--secondary-container);background:rgba(0,238,252,.06)}
+.empty h3{font-family:'Anton',sans-serif;font-size:28px;letter-spacing:.04em;color:var(--on-surface-variant);text-transform:uppercase;margin-bottom:8px}
+
+/* =========================================================
+   PYTHON PANEL ― project / folder list
+   ========================================================= */
+.project{
+  background:var(--surface-container-low);
+  border:2px solid var(--glitch-white);
+  margin-bottom:20px;position:relative;
+  box-shadow:6px 6px 0 0 rgba(0,0,0,.6);
+}
+.project-head{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  background:var(--surface-container-high);
+  border-bottom:2px solid var(--outline-variant);
+  padding:12px 16px;
+}
+.folder-tab{
+  background:var(--tertiary-container);color:var(--deep-void);
+  font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;
+  letter-spacing:.06em;text-transform:uppercase;padding:5px 12px;
+  clip-path:polygon(0 0,100% 0,100% 100%,8px 100%,0 calc(100% - 8px));
+}
+.project-name{font-family:'Anton',sans-serif;font-size:22px;letter-spacing:.03em;color:var(--glitch-white);text-transform:uppercase;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.project-meta{color:var(--outline);font-size:12px}
+
+.desc-row{padding:14px 16px;border-bottom:1px dashed var(--outline-variant)}
+.desc-row label{display:block;color:var(--secondary-container);margin-bottom:6px}
+.desc-input{
+  width:100%;background:var(--surface-container-lowest);color:var(--on-surface);
+  border:none;border-bottom:2px solid var(--outline-variant);
+  font-family:'Space Grotesk',sans-serif;font-size:15px;padding:8px 4px;
+  transition:border-color .15s;
+}
+.desc-input::placeholder{color:var(--outline-variant)}
+.desc-input:focus{outline:none;border-bottom-color:var(--primary);animation:focusPulse 1.4s infinite}
+@keyframes focusPulse{0%,100%{border-bottom-color:var(--primary)}50%{border-bottom-color:var(--secondary-container)}}
+
+.filetree{padding:8px 0 12px;max-height:280px;overflow:auto}
+.file-item{
+  display:flex;align-items:center;gap:10px;padding:6px 16px;
+  border-left:3px solid transparent;font-size:14px;
+  position:relative;
+}
+.file-item:hover{background:rgba(255,75,137,.08);border-left-color:var(--primary)}
+.file-item .ext{
+  font-family:'JetBrains Mono',monospace;font-weight:700;font-size:10px;
+  letter-spacing:.05em;background:#000;padding:2px 6px;min-width:46px;text-align:center;
+}
+.file-item .ext.py{color:var(--neon-lime)}
+.file-item .ext.cfg{color:var(--electric-yellow)}
+.file-item .ext.dat{color:var(--secondary-container)}
+.file-item .ext.gen{color:var(--on-surface-variant)}
+.file-item .path{font-family:'JetBrains Mono',monospace;color:var(--on-surface-variant);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-item .indent{color:var(--outline-variant)}
+.file-item .size{margin-left:auto;color:var(--outline);font-size:11px;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+
+/* =========================================================
+   DESIGN.md PANEL ― preview
+   ========================================================= */
+.dm-grid{display:grid;grid-template-columns:1fr;gap:20px}
+@media(min-width:920px){.dm-grid{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}}
+
+.card{
+  background:var(--surface-container-low);
+  border:2px solid var(--glitch-white);
+  position:relative;box-shadow:6px 6px 0 0 rgba(0,0,0,.6);
+}
+.card-tab{
+  position:absolute;top:-2px;left:18px;transform:translateY(-100%);
+  background:var(--secondary-container);color:var(--deep-void);
+  font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px;
+  letter-spacing:.08em;text-transform:uppercase;padding:5px 12px 6px;
+  clip-path:polygon(0 0,100% 0,calc(100% - 8px) 100%,0 100%);
+}
+.card.pink{border-color:var(--primary)}
+.card.pink .card-tab{background:var(--primary-container)}
+.card-body{padding:22px 18px 20px}
+.dm-name{font-family:'Anton',sans-serif;font-size:34px;letter-spacing:.03em;text-transform:uppercase;color:var(--glitch-white);line-height:.95;margin-bottom:4px}
+.dm-name .sp{color:var(--primary)}
+.dm-sub{color:var(--outline);margin-bottom:18px}
+
+.sec-label{display:flex;align-items:center;gap:10px;margin:22px 0 12px}
+.sec-label span{color:var(--secondary-container)}
+.sec-label .rule{flex:1;height:1px;background:repeating-linear-gradient(to right,var(--outline-variant) 0 6px,transparent 6px 12px)}
+
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px}
+.swatch{border:1px solid #000;cursor:default}
+.swatch .chip{height:46px;border-bottom:1px solid rgba(0,0,0,.4)}
+.swatch .meta{background:#000;padding:5px 6px}
+.swatch .k{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--on-surface);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.swatch .v{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--outline)}
+
+.typo-row{padding:10px 0;border-bottom:1px dashed var(--outline-variant)}
+.typo-row .tk{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--secondary-container);letter-spacing:.06em;display:block;margin-bottom:4px}
+.typo-row .sample{color:var(--glitch-white);line-height:1.1}
+.typo-row .spec{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--outline)}
+
+.kv{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed var(--outline-variant);font-family:'JetBrains Mono',monospace;font-size:13px}
+.kv .kk{color:var(--on-surface-variant)}
+.kv .vv{color:var(--neon-lime)}
+
+/* image gallery */
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.shot{position:relative;border:2px solid var(--glitch-white);background:#000;aspect-ratio:4/3;overflow:hidden}
+.shot img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(1.1)}
+.shot .cap{position:absolute;left:0;bottom:0;right:0;background:rgba(0,0,0,.7);color:var(--secondary);font-family:'JetBrains Mono',monospace;font-size:10px;padding:3px 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gallery .gempty{grid-column:1/-1;color:var(--outline-variant);font-family:'JetBrains Mono',monospace;font-size:12px;border:2px dashed var(--outline-variant);padding:18px;text-align:center}
+
+.raw-toggle{margin-top:18px}
+.raw-toggle summary{cursor:pointer;color:var(--tertiary);font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase;list-style:none}
+.raw-toggle summary::-webkit-details-marker{display:none}
+.raw-toggle summary::before{content:"▸ ";color:var(--primary)}
+.raw-toggle[open] summary::before{content:"▾ "}
+.raw-pre{margin-top:10px;max-height:300px;overflow:auto;background:var(--surface-container-lowest);border:1px solid var(--outline-variant);padding:14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--on-surface-variant);white-space:pre-wrap;word-break:break-word}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+footer{margin:48px 0 36px;padding-top:18px;border-top:1px dashed var(--outline-variant);color:var(--outline);display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+
+/* hidden file inputs */
+.hidden-input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+
+/* slanted divider accent under header */
+.slant-rule{height:6px;background:var(--primary-container);transform:skewY(calc(-1 * var(--slant)));transform-origin:left;margin:18px 0 4px;box-shadow:0 4px 0 0 var(--secondary-container)}
+
+/* reduced motion */
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+
+/* mobile tuning */
+@media(max-width:520px){
+  .context-label .ctx-mode{font-size:21px}
+  .btn-upload{width:100%;justify-content:center}
+  .actionbar{flex-direction:column;align-items:stretch}
+  .tab{padding:10px 14px;font-size:12px}
+  .dm-name{font-size:26px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ HEADER ============ -->
+  <header>
+    <div class="hud-top">
+      <div class="hud-chip pink"><span class="led"></span><span class="caps">NODE // PERSONAL-CLOUD</span></div>
+      <div class="hud-chip cyan"><span class="led"></span><span class="caps">STATUS: ONLINE</span></div>
+      <div class="hud-chip"><span class="caps" id="clock">--:--:--</span></div>
+    </div>
+
+    <!-- SVG GLITCH LOGO: Anywhere.file -->
+    <div class="logo-stage" aria-label="Anywhere.file">
+      <svg viewBox="0 0 760 130" role="img" aria-labelledby="logoTitle">
+        <title id="logoTitle">Anywhere.file</title>
+        <defs>
+          <style>
+            .lt{font-family:'Anton',sans-serif;font-size:96px;letter-spacing:-2px}
+            .dotfile{font-family:'Anton',sans-serif;font-size:96px}
+          </style>
+        </defs>
+        <!-- chromatic aberration layers -->
+        <text class="lt glitch-layer layer-cyan" x="6" y="96" fill="#00eefc" opacity="0.85">Anywhere<tspan fill="#00eefc">.file</tspan></text>
+        <text class="lt glitch-layer layer-pink" x="6" y="96" fill="#ff4b89" opacity="0.85">Anywhere<tspan fill="#ff4b89">.file</tspan></text>
+        <!-- main layer -->
+        <text class="lt" x="6" y="96" fill="#F0F0F0">Anywhere<tspan fill="#ffb1c3">.file</tspan></text>
+        <!-- scan slice accent -->
+        <rect x="0" y="40" width="760" height="3" fill="#CCFF00" opacity="0.5"/>
+      </svg>
+    </div>
+
+    <p class="tagline body-lg">どのPCからでも、ここにアクセスすれば自分のファイルへ到達できる。
+      <b>Access Anywhere.</b> ― 個人専用ファイルアクセスポイント。</p>
+
+    <div class="slant-rule" aria-hidden="true"></div>
+  </header>
+
+  <!-- ============ TABS ============ -->
+  <nav class="tabbar" role="tablist" aria-label="ファイルカテゴリ">
+    <button class="tab active" role="tab" aria-selected="true" data-tab="python" id="tab-python">[ Python ]</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="design" id="tab-design">[ DESIGN<span class="dot">.md</span> ]</button>
+  </nav>
+
+  <!-- ============ ACTION BAR ============ -->
+  <div class="actionbar">
+    <div class="context-label">
+      <span class="ctx-mode" id="ctxMode">MODE // <span class="em">PYTHON</span></span>
+      <small class="mono" id="ctxHint">フォルダごとアップロード可能。各プロジェクトに用途を一言で記録します。</small>
+    </div>
+    <button class="btn-upload" id="uploadBtn">
+      <span class="arrow">▲</span><span id="uploadLabel">UPLOAD FOLDER</span>
+    </button>
+  </div>
+
+  <!-- hidden inputs -->
+  <input type="file" id="folderInput" class="hidden-input" webkitdirectory directory multiple>
+  <input type="file" id="mdInput" class="hidden-input" accept=".md,.markdown,text/markdown,image/*" multiple>
+
+  <!-- ============ PYTHON PANEL ============ -->
+  <section class="panel active" id="panel-python" role="tabpanel" aria-labelledby="tab-python">
+    <div class="empty" id="pyEmpty">
+      <h3>NO PROJECTS LOADED</h3>
+      <p class="mono">フォルダをドラッグ＆ドロップ、または上の <b>UPLOAD FOLDER</b> を押してプロジェクトを丸ごと投入。</p>
+    </div>
+    <div id="pyList"></div>
+  </section>
+
+  <!-- ============ DESIGN.md PANEL ============ -->
+  <section class="panel" id="panel-design" role="tabpanel" aria-labelledby="tab-design">
+    <div class="empty" id="dmEmpty">
+      <h3>NO DESIGN LOADED</h3>
+      <p class="mono"><b>DESIGN.md</b> をアップロードすると frontmatter を解析してプレビュー表示。画像を添えるとデザインサンプルも並びます。</p>
+    </div>
+    <div class="dm-grid" id="dmView" style="display:none">
+      <!-- left: parsed preview -->
+      <div class="card pink">
+        <div class="card-tab">DESIGN.md // PARSED</div>
+        <div class="card-body">
+          <div class="dm-name" id="dmName">UNTITLED<span class="sp">_SYSTEM</span></div>
+          <div class="dm-sub mono" id="dmFile">―</div>
+
+          <div class="sec-label caps"><span>COLORS</span><span class="rule"></span></div>
+          <div class="swatches" id="dmColors"></div>
+
+          <div class="sec-label caps"><span>TYPOGRAPHY</span><span class="rule"></span></div>
+          <div id="dmTypo"></div>
+
+          <div class="sec-label caps"><span>SPACING</span><span class="rule"></span></div>
+          <div id="dmSpacing"></div>
+
+          <details class="raw-toggle">
+            <summary>VIEW RAW SOURCE</summary>
+            <pre class="raw-pre" id="dmRaw"></pre>
+          </details>
+        </div>
+      </div>
+      <!-- right: image gallery -->
+      <div class="card">
+        <div class="card-tab">DESIGN SAMPLES // IMG</div>
+        <div class="card-body">
+          <div class="sec-label caps"><span>PREVIEW GALLERY</span><span class="rule"></span></div>
+          <div class="gallery" id="dmGallery">
+            <div class="gempty">画像未登録 ― DESIGN.md と一緒に画像を投入してください</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer>
+    <span class="caps">ANYWHERE.FILE</span>
+    <span class="mono" style="font-size:11px">SAMPLE BUILD ― ブラウザ内デモ動作 / 永続化は次フェーズで構成予定</span>
+  </footer>
+
+</div>
+
+<script>
+/* =========================================================
+   STATE  ― サンプル段階：ブラウザ内メモリのみ（永続化なし）
+   ========================================================= */
+let currentTab = 'python';
+
+const els = {
+  tabs: document.querySelectorAll('.tab'),
+  panels: { python: document.getElementById('panel-python'), design: document.getElementById('panel-design') },
+  uploadBtn: document.getElementById('uploadBtn'),
+  uploadLabel: document.getElementById('uploadLabel'),
+  ctxMode: document.getElementById('ctxMode'),
+  ctxHint: document.getElementById('ctxHint'),
+  folderInput: document.getElementById('folderInput'),
+  mdInput: document.getElementById('mdInput'),
+  pyEmpty: document.getElementById('pyEmpty'),
+  pyList: document.getElementById('pyList'),
+  dmEmpty: document.getElementById('dmEmpty'),
+  dmView: document.getElementById('dmView'),
+};
+
+/* ---------- clock (HUD) ---------- */
+function tick(){
+  const d = new Date();
+  const p = n => String(n).padStart(2,'0');
+  document.getElementById('clock').textContent = `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
+setInterval(tick,1000); tick();
+
+/* =========================================================
+   TAB SWITCHING
+   ========================================================= */
+els.tabs.forEach(t=>{
+  t.addEventListener('click',()=>switchTab(t.dataset.tab));
+});
+function switchTab(name){
+  currentTab = name;
+  els.tabs.forEach(t=>{
+    const on = t.dataset.tab===name;
+    t.classList.toggle('active',on);
+    t.setAttribute('aria-selected', on?'true':'false');
+  });
+  els.panels.python.classList.toggle('active', name==='python');
+  els.panels.design.classList.toggle('active', name==='design');
+
+  if(name==='python'){
+    els.ctxMode.innerHTML = 'MODE // <span class="em">PYTHON</span>';
+    els.ctxHint.textContent = 'フォルダごとアップロード可能。各プロジェクトに用途を一言で記録します。';
+    els.uploadLabel.textContent = 'UPLOAD FOLDER';
+  }else{
+    els.ctxMode.innerHTML = 'MODE // <span class="em" style="color:var(--secondary-container)">DESIGN.md</span>';
+    els.ctxHint.textContent = 'DESIGN.md と画像をアップロード。frontmatter を解析してデザインをプレビューします。';
+    els.uploadLabel.textContent = 'UPLOAD .md / IMG';
+  }
+}
+
+/* =========================================================
+   UPLOAD ROUTING  ― タブで挙動が変わる
+   ========================================================= */
+els.uploadBtn.addEventListener('click',()=>{
+  els.uploadBtn.classList.add('glitching');
+  setTimeout(()=>els.uploadBtn.classList.remove('glitching'),650);
+  if(currentTab==='python'){ els.folderInput.click(); }
+  else { els.mdInput.click(); }
+});
+els.folderInput.addEventListener('change',e=>handleFolder(e.target.files));
+els.mdInput.addEventListener('change',e=>handleDesignFiles(e.target.files));
+
+/* =========================================================
+   PYTHON: フォルダ取り込み → プロジェクト単位でツリー表示
+   ========================================================= */
+function extClass(name){
+  const n = name.toLowerCase();
+  if(n.endsWith('.py')) return 'py';
+  if(n.match(/\.(cfg|ini|toml|yml|yaml|json|env|txt|md)$/)) return 'cfg';
+  if(n.match(/\.(csv|tsv|xlsx|db|sqlite|parquet|pkl|npy)$/)) return 'dat';
+  return 'gen';
+}
+function extLabel(name){
+  const m = name.toLowerCase().match(/\.([a-z0-9]+)$/);
+  return m ? m[1].slice(0,4).toUpperCase() : 'DIR';
+}
+function fmtSize(b){
+  if(b<1024) return b+' B';
+  if(b<1048576) return (b/1024).toFixed(1)+' KB';
+  return (b/1048576).toFixed(1)+' MB';
+}
+function handleFolder(fileList){
+  if(!fileList || !fileList.length) return;
+  const files = Array.from(fileList);
+  // group by top-level folder (project)
+  const projects = {};
+  files.forEach(f=>{
+    const rel = f.webkitRelativePath || f.name;
+    const top = rel.split('/')[0];
+    (projects[top] = projects[top] || []).push(f);
+  });
+  els.pyEmpty.style.display='none';
+  Object.keys(projects).forEach(name=>renderProject(name, projects[name]));
+}
+function renderProject(name, files){
+  const wrap = document.createElement('div');
+  wrap.className='project';
+  const totalSize = files.reduce((s,f)=>s+f.size,0);
+  const pyCount = files.filter(f=>f.name.toLowerCase().endsWith('.py')).length;
+
+  const head = document.createElement('div');
+  head.className='project-head';
+  head.innerHTML = `
+    <span class="folder-tab">FOLDER</span>
+    <span class="project-name" title="${name}">${name}</span>
+    <span class="project-meta mono">${files.length} files · ${pyCount} .py · ${fmtSize(totalSize)}</span>`;
+
+  const desc = document.createElement('div');
+  desc.className='desc-row';
+  desc.innerHTML = `<label class="caps">WHAT IT DOES // 一言説明</label>
+    <input class="desc-input" type="text" placeholder="例）上場企業のPVティアを判定するデータパイプライン" />`;
+
+  const tree = document.createElement('div');
+  tree.className='filetree';
+  // sort by path for readable tree
+  files.sort((a,b)=>(a.webkitRelativePath||a.name).localeCompare(b.webkitRelativePath||b.name));
+  files.forEach(f=>{
+    const rel = (f.webkitRelativePath || f.name);
+    const parts = rel.split('/');
+    const depth = parts.length - 1;
+    const indent = '└ '.repeat(0) + '　'.repeat(Math.max(0,depth-1)) + (depth>0?'└ ':'');
+    const row = document.createElement('div');
+    row.className='file-item';
+    row.innerHTML = `
+      <span class="ext ${extClass(f.name)}">${extLabel(f.name)}</span>
+      <span class="path"><span class="indent">${indent}</span>${f.name}</span>
+      <span class="size">${fmtSize(f.size)}</span>`;
+    tree.appendChild(row);
+  });
+
+  wrap.appendChild(head);
+  wrap.appendChild(desc);
+  wrap.appendChild(tree);
+  els.pyList.appendChild(wrap);
+}
+
+/* =========================================================
+   DESIGN.md: .md 解析 + 画像ギャラリー
+   ========================================================= */
+function handleDesignFiles(fileList){
+  if(!fileList || !fileList.length) return;
+  const files = Array.from(fileList);
+  const mdFile = files.find(f=>/\.(md|markdown)$/i.test(f.name) || f.type==='text/markdown');
+  const images = files.filter(f=>f.type.startsWith('image/'));
+
+  if(mdFile){
+    const reader = new FileReader();
+    reader.onload = ev => renderDesign(mdFile.name, ev.target.result);
+    reader.readAsText(mdFile);
+  }else if(els.dmView.style.display==='none'){
+    // 画像だけ先に来た場合でもビューを開く
+    els.dmEmpty.style.display='none';
+    els.dmView.style.display='grid';
+  }
+  if(images.length) renderGallery(images);
+}
+
+/* ---- 簡易 frontmatter パーサ（--- 〜 --- のYAML風ブロック） ---- */
+function parseFrontmatter(text){
+  const m = text.match(/^\uFEFF?---\s*\n([\s\S]*?)\n---/);
+  if(!m) return {meta:{}, colors:{}, typography:{}, spacing:{}, hasFM:false};
+  const lines = m[1].split('\n');
+  const meta = {}; const colors = {}; const typography = {}; const spacing = {};
+  let section = null;          // 'colors' | 'typography' | 'spacing' | null
+  let typoKey = null;          // 現在のタイポグラフィ・トークン名
+
+  const clean = v => v.replace(/^['"]|['"]$/g,'').trim();
+
+  lines.forEach(raw=>{
+    if(!raw.trim()) return;
+    const indent = raw.match(/^(\s*)/)[1].length;
+    const line = raw.trim();
+    const kv = line.match(/^([\w-]+):\s*(.*)$/);
+
+    if(indent===0 && kv){
+      const key = kv[1], val = kv[2];
+      if(key==='colors'){section='colors';return;}
+      if(key==='typography'){section='typography';return;}
+      if(key==='spacing'){section='spacing';return;}
+      section=null; meta[key]=clean(val); return;
+    }
+    if(!kv) return;
+    const key = kv[1], val = kv[2];
+
+    if(section==='colors'){ colors[key]=clean(val); }
+    else if(section==='spacing'){ spacing[key]=clean(val); }
+    else if(section==='typography'){
+      if(val===''){ typoKey=key; typography[typoKey]={}; }     // 2階層目（トークン名）
+      else if(typoKey && indent>=4){ typography[typoKey][key]=clean(val); } // 3階層目（プロパティ）
+    }
+  });
+  return {meta, colors, typography, spacing, hasFM:true};
+}
+
+const FONT_MAP = {
+  anton:"'Anton', sans-serif",
+  spaceGrotesk:"'Space Grotesk', sans-serif",
+  jetbrainsMono:"'JetBrains Mono', monospace"
+};
+
+function renderDesign(filename, text){
+  const data = parseFrontmatter(text);
+  els.dmEmpty.style.display='none';
+  els.dmView.style.display='grid';
+
+  // name
+  const nm = (data.meta.name || filename.replace(/\.(md|markdown)$/i,'')).trim();
+  const np = nm.split(/\s+/);
+  document.getElementById('dmName').innerHTML =
+    np.length>1 ? `${np[0]}<span class="sp"> ${np.slice(1).join(' ')}</span>` : `<span class="sp">${nm}</span>`;
+  document.getElementById('dmFile').textContent = filename;
+  document.getElementById('dmRaw').textContent = text;
+
+  // colors
+  const cWrap = document.getElementById('dmColors');
+  cWrap.innerHTML='';
+  const cEntries = Object.entries(data.colors);
+  if(!cEntries.length){ cWrap.innerHTML='<div class="mono" style="color:var(--outline-variant);font-size:12px">colors 未検出</div>'; }
+  cEntries.forEach(([k,v])=>{
+    const div = document.createElement('div');
+    div.className='swatch';
+    div.innerHTML = `<div class="chip" style="background:${v}"></div>
+      <div class="meta"><span class="k" title="${k}">${k}</span><span class="v">${v}</span></div>`;
+    cWrap.appendChild(div);
+  });
+
+  // typography
+  const tWrap = document.getElementById('dmTypo');
+  tWrap.innerHTML='';
+  const tEntries = Object.entries(data.typography);
+  if(!tEntries.length){ tWrap.innerHTML='<div class="mono" style="color:var(--outline-variant);font-size:12px">typography 未検出</div>'; }
+  tEntries.forEach(([token,props])=>{
+    const ff = FONT_MAP[props.fontFamily] || props.fontFamily || 'inherit';
+    let fs = parseInt(props.fontSize)||20; if(fs>40) fs=40; // プレビュー用に上限
+    const row = document.createElement('div');
+    row.className='typo-row';
+    row.innerHTML = `<span class="tk">${token}</span>
+      <div class="sample" style="font-family:${ff};font-size:${fs}px;font-weight:${props.fontWeight||400};letter-spacing:${props.letterSpacing||'normal'}">Anywhere.file</div>
+      <span class="spec">${props.fontFamily||''} · ${props.fontSize||''} · w${props.fontWeight||''}</span>`;
+    tWrap.appendChild(row);
+  });
+
+  // spacing
+  const sWrap = document.getElementById('dmSpacing');
+  sWrap.innerHTML='';
+  const sEntries = Object.entries(data.spacing);
+  if(!sEntries.length){ sWrap.innerHTML='<div class="mono" style="color:var(--outline-variant);font-size:12px">spacing 未検出</div>'; }
+  sEntries.forEach(([k,v])=>{
+    const row = document.createElement('div');
+    row.className='kv';
+    row.innerHTML = `<span class="kk">${k}</span><span class="vv">${v}</span>`;
+    sWrap.appendChild(row);
+  });
+}
+
+function renderGallery(images){
+  const g = document.getElementById('dmGallery');
+  // 最初の画像投入時に空表示を消す
+  if(g.querySelector('.gempty')) g.innerHTML='';
+  images.forEach(img=>{
+    const url = URL.createObjectURL(img);
+    const fig = document.createElement('div');
+    fig.className='shot';
+    fig.innerHTML = `<img src="${url}" alt="${img.name}" /><div class="cap" title="${img.name}">${img.name}</div>`;
+    g.appendChild(fig);
+  });
+}
+
+/* =========================================================
+   DRAG & DROP  ― 各パネルの空エリアに対応
+   ========================================================= */
+function setupDrop(zone, onFiles){
+  ['dragenter','dragover'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.add('drag');}));
+  ['dragleave','drop'].forEach(ev=>zone.addEventListener(ev,e=>{e.preventDefault();zone.classList.remove('drag');}));
+  zone.addEventListener('drop',e=>{
+    const items = e.dataTransfer.items;
+    if(items && items.length && items[0].webkitGetAsEntry){
+      // フォルダ含むドロップに対応（Python向け）
+      const all=[]; let pending=0; let done=false;
+      const finish=()=>{ if(done && pending===0) onFiles(all); };
+      const walk=(entry,path)=>{
+        if(entry.isFile){ pending++; entry.file(f=>{ try{Object.defineProperty(f,'webkitRelativePath',{value:path+f.name});}catch(_){} all.push(f); pending--; finish(); }); }
+        else if(entry.isDirectory){ const rd=entry.createReader(); rd.readEntries(ents=>{ ents.forEach(en=>walk(en, path+entry.name+'/')); finish(); }); }
+      };
+      Array.from(items).forEach(it=>{ const en=it.webkitGetAsEntry&&it.webkitGetAsEntry(); if(en) walk(en,''); });
+      done=true; finish();
+    }else{
+      onFiles(Array.from(e.dataTransfer.files));
+    }
+  });
+}
+setupDrop(els.pyEmpty, handleFolder);
+setupDrop(els.dmEmpty, handleDesignFiles);
+
+</script>
+</body>
+</html>
