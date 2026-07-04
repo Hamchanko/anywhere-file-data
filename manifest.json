@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-04T15:10:18.766Z",
+  "updated": "2026-07-04T15:13:23.601Z",
   "python": [
     {
       "name": "mysite",
@@ -18,14 +18,6 @@
       "images": [],
       "updated": "2026-06-21T06:43:40.856Z",
       "id": "DESIGN"
-    },
-    {
-      "id": "ginza",
-      "name": "Ginza",
-      "desc": "",
-      "path": "data/design/ginza/DESIGN.md",
-      "images": [],
-      "updated": "2026-07-04T15:10:17.639Z"
     }
   ]
 }
