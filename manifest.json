@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-05T01:55:08.925Z",
+  "updated": "2026-07-05T13:53:33.558Z",
   "python": [
     {
       "name": "mysite",
@@ -8,6 +8,14 @@
       "fileCount": 4,
       "updated": "2026-06-21T06:42:15.801Z",
       "id": "mysite"
+    },
+    {
+      "id": "tasks",
+      "name": "tasks",
+      "desc": "タスク管理アプリ",
+      "path": "data/python/tasks/",
+      "fileCount": 1,
+      "updated": "2026-07-05T13:53:30.369Z"
     }
   ],
   "design": [
@@ -17,7 +25,8 @@
       "path": "data/design/DESIGN/DESIGN.md",
       "images": [],
       "updated": "2026-07-05T01:55:07.224Z",
-      "id": "DESIGN"
+      "id": "DESIGN",
+      "created": "2026-07-05T01:55:07.224Z"
     }
   ]
 }
