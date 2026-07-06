@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-06T02:35:28.438Z",
+  "updated": "2026-07-06T02:35:57.438Z",
   "python": [
     {
       "name": "mysite",
@@ -72,6 +72,15 @@
       "images": [],
       "created": "2026-07-06T02:35:26.898Z",
       "updated": "2026-07-06T02:35:26.898Z"
+    },
+    {
+      "id": "sewa-2",
+      "name": "SEWA",
+      "desc": "青と白の明瞭でクールなテーマ",
+      "path": "data/design/sewa-2/DESIGN.md",
+      "images": [],
+      "created": "2026-07-06T02:35:56.317Z",
+      "updated": "2026-07-06T02:35:56.317Z"
     }
   ]
 }
