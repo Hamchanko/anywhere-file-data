@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-06T02:33:04.719Z",
+  "updated": "2026-07-06T02:33:34.406Z",
   "python": [
     {
       "name": "mysite",
@@ -36,6 +36,15 @@
       "images": [],
       "created": "2026-07-06T02:29:53.559Z",
       "updated": "2026-07-06T02:33:02.747Z"
+    },
+    {
+      "id": "nine",
+      "name": "NINE",
+      "desc": "Crystalline Portal",
+      "path": "data/design/nine/DESIGN.md",
+      "images": [],
+      "created": "2026-07-06T02:33:33.385Z",
+      "updated": "2026-07-06T02:33:33.385Z"
     }
   ]
 }
