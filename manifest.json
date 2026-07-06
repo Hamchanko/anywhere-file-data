@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-06T02:37:53.964Z",
+  "updated": "2026-07-06T02:38:16.864Z",
   "python": [
     {
       "name": "mysite",
@@ -81,6 +81,15 @@
       "images": [],
       "created": "2026-07-06T02:35:56.317Z",
       "updated": "2026-07-06T02:35:56.317Z"
+    },
+    {
+      "id": "ginza6",
+      "name": "Ginza6",
+      "desc": "淡い橙の洗練されたテーマ",
+      "path": "data/design/ginza6/DESIGN.md",
+      "images": [],
+      "created": "2026-07-06T02:38:16.200Z",
+      "updated": "2026-07-06T02:38:16.201Z"
     }
   ]
 }
