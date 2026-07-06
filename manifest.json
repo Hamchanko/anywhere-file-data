@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-06T02:38:16.864Z",
+  "updated": "2026-07-06T03:06:10.354Z",
   "python": [
     {
       "name": "mysite",
@@ -90,6 +90,15 @@
       "images": [],
       "created": "2026-07-06T02:38:16.200Z",
       "updated": "2026-07-06T02:38:16.201Z"
+    },
+    {
+      "id": "apple",
+      "name": "Apple",
+      "desc": "ミニマルでゆったりなデザイン",
+      "path": "data/design/apple/DESIGN.md",
+      "images": [],
+      "created": "2026-07-06T03:06:07.912Z",
+      "updated": "2026-07-06T03:06:07.912Z"
     }
   ]
 }
