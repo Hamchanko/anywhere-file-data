@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TASK MAP — 迷子にならない行動計画</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Yusei+Magic&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-black:#0b0b14;
+    --panel:#15151f;
+    --panel-2:#1c1c2a;
+    --line:#2b2b3d;
+    --pink:#ff2d78;
+    --pink-d:#c2154f;
+    --cyan:#00e5c8;
+    --cyan-d:#00a88f;
+    --lime:#c6ff3d;
+    --lime-d:#8fbf1f;
+    --purple:#9b4dff;
+    --purple-d:#6c2fc9;
+    --yellow:#ffe135;
+    --yellow-d:#d9b800;
+    --coral:#ff6b4a;
+    --coral-d:#cc4423;
+    --text-light:#f5f5ff;
+    --text-dim:#9a9ab0;
+    --text-dark:#1a1a22;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--ink-black);
+    color:var(--text-light);
+    font-family:"Yusei Magic","Fredoka",sans-serif;
+    overflow:hidden;
+  }
+  .app{
+    display:flex;
+    height:100vh;
+    width:100vw;
+    position:relative;
+  }
+
+  /* ===== background splash decoration ===== */
+  .bg-splash{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  /* ===== sidebar ===== */
+  .sidebar{
+    width:280px;
+    min-width:280px;
+    background:var(--panel);
+    border-right:3px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    z-index:2;
+    overflow:hidden;
+    transition:width .22s ease, min-width .22s ease, border-color .22s ease;
+  }
+  body.sidebar-collapsed .sidebar{
+    width:0;
+    min-width:0;
+    border-right-color:transparent;
+  }
+  .sidebar-inner{
+    width:280px;
+    min-width:280px;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+  }
+  .sidebar-header{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:18px 12px 12px 16px;
+  }
+  .logo-squid{ width:38px; height:38px; flex-shrink:0; }
+  .logo-text{
+    font-family:"Fredoka",sans-serif;
+    font-weight:700;
+    font-size:20px;
+    letter-spacing:0.03em;
+    background:linear-gradient(90deg,var(--pink),var(--cyan));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+  .logo-sub{
+    font-size:10px;
+    color:var(--text-dim);
+    letter-spacing:0.08em;
+    margin-top:-2px;
+  }
+  .sidebar-collapse-btn{
+    margin-left:auto;
+    flex-shrink:0;
+    width:28px; height:28px;
+    background:var(--panel-2);
+    border:2px solid var(--line);
+    color:var(--text-light);
+    border-radius:50%;
+    font-size:13px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .sidebar-collapse-btn:hover{ border-color:var(--cyan); }
+  .home-link{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background:none;
+    border:none;
+    padding:0;
+    margin:0;
+    cursor:pointer;
+    text-align:left;
+    border-radius:10px;
+  }
+  .home-link:hover{ background:var(--panel-2); }
+  .home-link:hover .logo-text{ filter:brightness(1.15); }
+  .sidebar-footer{
+    padding:10px 16px 16px 16px;
+    border-top:2px solid var(--line);
+  }
+  .delete-all-btn{
+    width:100%;
+    padding:10px 12px;
+    background:transparent;
+    border:2px solid var(--line);
+    color:var(--text-dim);
+    font-family:"Fredoka",sans-serif;
+    font-weight:600;
+    font-size:13px;
+    border-radius:12px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    transition:border-color .12s ease, color .12s ease;
+  }
+  .delete-all-btn:hover{
+    border-color:var(--pink);
+    color:var(--pink);
+  }
+  .sidebar-reopen-btn{
+    display:none;
+    position:fixed;
+    top:14px; left:14px;
+    z-index:6;
+    width:40px;height:40px;
+    background:var(--panel);
+    border:2px solid var(--line);
+    color:var(--text-light);
+    border-radius:50%;
+    font-size:16px;
+    cursor:pointer;
+    align-items:center;
+    justify-content:center;
+  }
+  .sidebar-reopen-btn:hover{ border-color:var(--cyan); }
+  body.sidebar-collapsed .sidebar-reopen-btn{ display:flex; }
+  .new-task-btn{
+    margin:6px 16px 14px 16px;
+    padding:13px 14px;
+    background:var(--pink);
+    border:3px solid var(--text-dark);
+    color:#fff;
+    font-family:"Fredoka",sans-serif;
+    font-weight:600;
+    font-size:15px;
+    border-radius:22px 30px 26px 34px;
+    box-shadow:0 5px 0 var(--pink-d);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    transition:transform .08s ease, box-shadow .08s ease;
+  }
+  .new-task-btn:hover{ filter:brightness(1.08); }
+  .new-task-btn:active{
+    transform:translateY(5px);
+    box-shadow:0 0 0 var(--pink-d);
+  }
+  .sidebar-section-label{
+    padding:4px 18px;
+    font-size:11px;
+    letter-spacing:0.12em;
+    color:var(--text-dim);
+    font-family:"Fredoka",sans-serif;
+    font-weight:600;
+  }
+  .recent-list{
+    flex:1;
+    overflow-y:auto;
+    padding:6px 10px 10px 10px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .recent-item{
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 12px;
+    border-radius:10px;
+    cursor:pointer;
+    border:2px solid transparent;
+    background:transparent;
+  }
+  .recent-item:hover{ background:var(--panel-2); }
+  .recent-item.active{
+    background:var(--panel-2);
+    border-color:var(--cyan);
+  }
+  .recent-dot{
+    width:10px;height:10px;border-radius:50%;
+    flex-shrink:0;
+  }
+  .recent-info{ flex:1; min-width:0; }
+  .recent-title{
+    font-size:14px;
+    color:var(--text-light);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .recent-meta{
+    font-size:11px;
+    color:var(--text-dim);
+    font-family:"Fredoka",sans-serif;
+  }
+  .recent-del{
+    opacity:0;
+    background:none;
+    border:none;
+    color:var(--text-dim);
+    font-size:15px;
+    cursor:pointer;
+    padding:2px 4px;
+    flex-shrink:0;
+  }
+  .recent-item:hover .recent-del{ opacity:1; }
+  .recent-del:hover{ color:var(--pink); }
+  .recent-empty{
+    color:var(--text-dim);
+    font-size:12.5px;
+    padding:14px 16px;
+    line-height:1.8;
+  }
+
+  /* ===== main ===== */
+  .main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    z-index:1;
+    min-width:0;
+  }
+  .topbar{
+    padding:18px 28px 14px 28px;
+    border-bottom:3px solid var(--line);
+    background:var(--panel);
+    z-index:2;
+  }
+  .task-title{
+    font-family:"Fredoka",sans-serif;
+    font-weight:700;
+    font-size:24px;
+    color:var(--text-light);
+    outline:none;
+    display:inline-block;
+    min-width:2ch;
+    border-bottom:2px dashed transparent;
+  }
+  .task-title:hover, .task-title:focus{ border-bottom-color:var(--cyan); }
+  .topbar-meta{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    margin-top:10px;
+    flex-wrap:wrap;
+  }
+  .progress-wrap{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+    color:var(--text-dim);
+    font-family:"Fredoka",sans-serif;
+  }
+  .progress-bar{
+    width:140px;
+    height:10px;
+    background:var(--panel-2);
+    border-radius:6px;
+    overflow:hidden;
+    border:1px solid var(--line);
+  }
+  .progress-fill{
+    height:100%;
+    background:linear-gradient(90deg,var(--lime),var(--cyan));
+    width:0%;
+    transition:width .25s ease;
+  }
+  .current-trail{
+    font-size:12.5px;
+    color:var(--text-dim);
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+  .current-trail b{
+    color:var(--yellow);
+    font-family:"Fredoka",sans-serif;
+    font-weight:600;
+  }
+  .trail-seg{
+    color:var(--text-light);
+    background:var(--panel-2);
+    padding:2px 8px;
+    border-radius:8px;
+    font-size:12px;
+  }
+
+  /* ===== canvas (Pan & Zoom) ===== */
+  .canvas-wrap{
+    flex:1;
+    overflow:hidden;
+    position:relative;
+    cursor: grab;
+  }
+  .canvas-wrap.dragging{
+    cursor: grabbing;
+  }
+  .canvas-inner{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1);
+    transform-origin: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* 描画のブレを防ぐためにwill-changeを指定 */
+    will-change: transform;
+  }
+
+  /* ===== empty state ===== */
+  .empty-state{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    color:var(--text-dim);
+    gap:14px;
+  }
+  .empty-state svg{ width:120px; height:120px; opacity:.8; }
+  .empty-state h2{
+    font-family:"Fredoka",sans-serif;
+    color:var(--text-light);
+    font-size:20px;
+    margin:0;
+  }
+  .empty-state p{ font-size:13.5px; margin:0; line-height:1.8; max-width:320px; }
+
+  /* ===== tree ===== */
+  .tree, .tree ul{
+    list-style:none;
+    margin:0;
+    padding:24px 6px 0 6px;
+    display:flex;
+    justify-content:center;
+    position:relative;
+    transform-origin:top center;
+  }
+  .tree{ padding-top:0; }
+  .tree li{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    position:relative;
+    padding:24px 12px 0 12px;
+  }
+  .tree li::before, .tree li::after{
+    content:'';
+    position:absolute;
+    top:0; right:50%;
+    border-top:3px solid var(--line);
+    width:50%; height:24px;
+  }
+  .tree li::after{ right:auto; left:50%; border-left:3px solid var(--line); }
+  .tree li:only-child::after, .tree li:only-child::before{ display:none; }
+  .tree li:only-child{ padding-top:0; }
+  .tree li:first-child::before{ border:0 none; }
+  .tree li:last-child::after{ border:0 none; }
+  .tree li:last-child::before{ border-right:3px solid var(--line); border-radius:0 6px 0 0; }
+  .tree li:first-child::after{ border-radius:6px 0 0 0; }
+  
+  ul#treeRoot > li::before,
+  ul#treeRoot > li::after {
+    display: none !important;
+    content: none !important;
+    border: none !important;
+  }
+  ul#treeRoot > li {
+    padding-top: 0 !important;
+  }
+
+  .tree ul::before{
+    content:'';
+    position:absolute;
+    top:0; left:50%;
+    border-left:3px solid var(--line);
+    width:0; height:24px;
+  }
+  .tree li.collapsed > ul{ display:none; }
+
+  .node-wrap{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+  .node-card{
+    position:relative;
+    min-width:150px;
+    max-width:230px;
+    padding:12px 16px;
+    border:3px solid var(--text-dark);
+    border-radius:22px 30px 26px 34px;
+    color:var(--text-dark);
+    font-size:14px;
+    line-height:1.5;
+    cursor:default;
+    box-shadow:0 5px 0 rgba(0,0,0,.35);
+    word-break:break-word;
+    transition:transform .1s ease;
+  }
+  .node-card:hover{ transform:translateY(-2px); }
+  .node-card.done{
+    opacity:.55;
+    text-decoration:line-through;
+  }
+  .node-card.current{
+    box-shadow:0 5px 0 rgba(0,0,0,.35), 0 0 0 3px var(--yellow);
+    animation:pulse 1.4s infinite;
+  }
+  @keyframes pulse{
+    0%,100%{ box-shadow:0 5px 0 rgba(0,0,0,.35), 0 0 0 3px var(--yellow), 0 0 0 3px rgba(255,225,53,.55); }
+    50%{ box-shadow:0 5px 0 rgba(0,0,0,.35), 0 0 0 3px var(--yellow), 0 0 0 12px rgba(255,225,53,0); }
+  }
+  .node-text{
+    outline:none;
+    font-family:"Yusei Magic",sans-serif;
+    cursor: text;
+  }
+  .pin-badge{
+    position:absolute;
+    top:-14px; right:-10px;
+    background:var(--yellow);
+    border:2px solid var(--text-dark);
+    border-radius:50%;
+    width:26px; height:26px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:13px;
+  }
+  .node-actions{
+    display:flex;
+    gap:5px;
+    margin-top:6px;
+    opacity:0;
+    transition:opacity .12s ease;
+  }
+  .node-wrap:hover .node-actions{ opacity:1; }
+  .node-btn{
+    background:var(--panel-2);
+    border:2px solid var(--line);
+    color:var(--text-light);
+    border-radius:8px;
+    width:26px; height:26px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    cursor:pointer;
+    line-height:1;
+  }
+  .node-btn:hover{ border-color:var(--cyan); }
+  .node-btn.danger:hover{ border-color:var(--pink); color:var(--pink); }
+  .collapse-toggle{
+    position:absolute;
+    bottom:-11px;
+    left:50%;
+    transform:translateX(-50%);
+    width:22px; height:22px;
+    background:var(--panel-2);
+    border:2px solid var(--line);
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:10px;
+    cursor:pointer;
+    color:var(--text-light);
+  }
+
+  .add-child-input{
+    margin-top:10px;
+    display:flex;
+    gap:4px;
+  }
+  .add-child-input input{
+    width:150px;
+    padding:6px 8px;
+    border-radius:8px;
+    border:2px solid var(--cyan);
+    background:var(--panel-2);
+    color:var(--text-light);
+    font-family:"Yusei Magic",sans-serif;
+    font-size:13px;
+    outline:none;
+  }
+  .add-child-input button{
+    background:var(--cyan);
+    border:2px solid var(--text-dark);
+    border-radius:8px;
+    font-size:12px;
+    cursor:pointer;
+    padding:0 10px;
+  }
+
+  /* ===== zoom controls ===== */
+  .zoom-controls{
+    position:fixed;
+    right:24px;
+    bottom:24px;
+    z-index:3;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:var(--panel);
+    border:2px solid var(--line);
+    border-radius:16px;
+    padding:6px 8px;
+    box-shadow:0 4px 0 rgba(0,0,0,.35);
+  }
+  .zoom-controls button{
+    width:26px; height:26px;
+    background:var(--panel-2);
+    border:2px solid var(--line);
+    color:var(--text-light);
+    border-radius:8px;
+    font-size:13px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .zoom-controls button:hover{ border-color:var(--cyan); }
+  .zoom-label{
+    font-family:"Fredoka",sans-serif;
+    font-size:12px;
+    color:var(--text-dim);
+    min-width:38px;
+    text-align:center;
+  }
+
+  /* ===== modal ===== */
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.6);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:10;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-box{
+    background:var(--panel);
+    border:3px solid var(--pink);
+    border-radius:24px;
+    padding:26px 26px 20px 26px;
+    width:340px;
+    max-width:90vw;
+    box-shadow:0 8px 0 var(--pink-d);
+  }
+  .modal-box h3{
+    margin:0 0 14px 0;
+    font-family:"Fredoka",sans-serif;
+    font-size:18px;
+  }
+  .modal-box input{
+    width:100%;
+    padding:11px 12px;
+    border-radius:10px;
+    border:2px solid var(--line);
+    background:var(--panel-2);
+    color:var(--text-light);
+    font-family:"Yusei Magic",sans-serif;
+    font-size:14px;
+    outline:none;
+    margin-bottom:16px;
+  }
+  .modal-box input:focus{ border-color:var(--cyan); }
+  .modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+  }
+  .modal-actions button{
+    font-family:"Fredoka",sans-serif;
+    font-weight:600;
+    font-size:13px;
+    padding:9px 16px;
+    border-radius:10px;
+    border:2px solid var(--text-dark);
+    cursor:pointer;
+  }
+  .btn-cancel{ background:var(--panel-2); color:var(--text-light); border-color:var(--line); }
+  .btn-confirm{ background:var(--lime); color:var(--text-dark); box-shadow:0 4px 0 var(--lime-d); }
+  .btn-confirm:active{ transform:translateY(4px); box-shadow:none; }
+
+  ::-webkit-scrollbar{ width:10px; height:10px; }
+  ::-webkit-scrollbar-track{ background:var(--panel); }
+  ::-webkit-scrollbar-thumb{ background:var(--panel-2); border-radius:6px; border:2px solid var(--line); }
+
+  @media (max-width:760px){
+    .sidebar{ position:fixed; top:0; left:0; bottom:0; z-index:4; }
+    body.sidebar-collapsed .sidebar{ box-shadow:none; }
+    body:not(.sidebar-collapsed) .sidebar{ box-shadow:6px 0 20px rgba(0,0,0,.5); }
+  }
+</style>
+</head>
+<body>
+
+<svg class="bg-splash" viewBox="0 0 1400 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <symbol id="userSplat35" viewBox="0 0 178 224"><path fill="#da0294" d="M60.0,8.0 C56.8,7.5 49.9,14.6 49.2,18.7 C48.5,22.8 53.0,28.0 55.9,32.4 C58.9,36.9 64.5,40.5 66.7,45.3 C69.0,50.1 69.7,56.3 69.5,61.2 C69.3,66.2 68.5,72.2 65.5,75.1 C62.4,78.0 55.3,80.2 51.1,78.7 C46.9,77.1 44.1,69.8 40.5,65.6 C36.8,61.5 32.1,54.3 29.2,54.0 C26.4,53.7 21.9,60.6 23.2,63.9 C24.5,67.1 33.5,69.6 37.0,73.5 C40.4,77.4 43.3,82.8 44.0,87.5 C44.7,92.1 43.9,99.5 40.9,101.4 C38.0,103.3 31.1,99.7 26.1,98.8 C21.1,97.9 12.4,94.7 10.8,96.0 C9.2,97.2 13.0,103.8 16.7,106.4 C20.4,108.9 28.7,108.1 32.8,111.1 C36.9,114.1 40.0,119.6 41.1,124.4 C42.2,129.3 41.9,136.6 39.5,140.3 C37.0,144.1 30.4,144.2 26.3,146.9 C22.1,149.5 13.9,155.0 14.4,156.2 C15.0,157.5 24.4,154.9 29.7,154.1 C34.9,153.2 40.9,150.3 46.1,151.1 C51.4,151.9 59.6,155.1 61.0,159.0 C62.3,162.8 56.7,169.4 54.0,174.2 C51.3,179.0 48.4,183.7 44.7,187.8 C41.1,192.0 35.3,195.0 32.4,199.2 C29.5,203.4 26.2,211.0 27.5,213.0 C28.7,215.0 36.3,213.7 39.9,211.0 C43.4,208.3 45.8,201.5 48.8,196.8 C51.7,192.0 54.3,186.7 57.7,182.5 C61.1,178.3 64.7,173.2 69.2,171.3 C73.7,169.5 79.7,170.0 84.6,171.3 C89.6,172.6 95.5,175.2 98.7,179.1 C101.9,183.1 101.8,190.3 104.0,195.1 C106.3,199.8 110.2,208.1 112.1,207.8 C114.0,207.6 115.2,198.7 115.5,193.6 C115.8,188.6 111.8,181.8 113.8,177.4 C115.7,173.0 123.6,171.1 126.9,167.0 C130.3,162.9 130.3,156.1 133.8,152.8 C137.4,149.6 143.3,148.2 148.5,147.5 C153.7,146.8 163.5,149.2 165.2,148.7 C167.0,148.1 162.7,145.9 159.1,143.9 C155.6,142.0 146.5,140.6 143.9,136.9 C141.3,133.1 145.0,125.9 143.5,121.4 C141.9,116.9 136.3,114.5 134.8,109.9 C133.2,105.4 132.9,99.1 134.0,93.9 C135.2,88.8 141.7,81.6 141.5,78.9 C141.4,76.2 135.7,75.3 133.3,77.6 C130.9,79.9 130.1,91.8 127.1,92.6 C124.2,93.5 117.4,87.1 115.5,82.7 C113.7,78.3 115.0,71.7 115.9,66.3 C116.9,60.9 121.9,53.9 121.2,50.4 C120.6,46.8 113.8,43.2 112.0,45.1 C110.2,47.1 112.5,57.6 110.6,61.9 C108.7,66.2 104.4,69.9 100.6,70.9 C96.7,71.9 90.7,70.7 87.2,67.6 C83.8,64.6 82.1,57.7 79.6,52.7 C77.0,47.7 73.8,43.0 71.9,37.8 C70.0,32.6 70.3,26.4 68.4,21.4 C66.4,16.5 63.2,8.5 60.0,8.0 Z"/></symbol>
+    <symbol id="userSplat29" viewBox="0 0 177 222"><path fill="#e1d005" d="M114.0,8.0 C111.4,6.6 101.0,12.4 99.3,16.3 C97.6,20.1 102.3,26.1 103.7,31.2 C105.1,36.4 107.3,41.8 107.8,47.2 C108.2,52.7 108.6,59.3 106.4,63.8 C104.2,68.4 99.2,73.3 94.8,74.6 C90.3,75.9 82.9,74.7 79.7,71.5 C76.4,68.4 77.2,60.6 75.4,55.4 C73.6,50.3 71.1,42.0 68.7,40.7 C66.3,39.3 60.8,43.8 61.1,47.2 C61.3,50.7 68.4,56.4 70.1,61.4 C71.8,66.5 72.5,72.6 71.3,77.3 C70.1,82.1 66.4,89.3 63.0,89.9 C59.5,90.5 54.8,83.7 50.4,81.0 C46.0,78.2 38.2,73.2 36.8,73.6 C35.4,74.0 39.2,79.7 42.0,83.4 C44.8,87.1 51.5,90.9 53.7,95.6 C55.9,100.2 56.2,106.4 55.3,111.4 C54.4,116.5 52.2,123.7 48.4,126.1 C44.6,128.6 37.5,125.4 32.6,126.2 C27.7,127.0 18.7,129.7 18.8,130.8 C19.0,132.0 28.4,132.0 33.3,133.1 C38.3,134.2 44.3,134.3 48.7,137.2 C53.0,140.0 59.2,146.1 59.4,150.1 C59.7,154.2 54.1,158.2 50.2,161.6 C46.4,165.0 41.3,168.0 36.3,170.5 C31.4,173.0 25.0,173.6 20.6,176.5 C16.2,179.4 9.5,185.5 9.9,187.9 C10.4,190.3 19.0,192.2 23.5,191.0 C28.0,189.8 32.4,184.2 36.8,180.8 C41.2,177.3 45.3,173.2 49.9,170.3 C54.5,167.4 59.2,163.7 64.2,163.3 C69.1,162.9 75.5,165.0 79.6,167.9 C83.7,170.8 86.9,175.8 88.7,180.8 C90.6,185.7 90.2,191.9 90.9,197.4 C91.6,203.0 91.8,213.8 93.0,213.9 C94.3,213.9 96.2,202.9 98.4,197.9 C100.6,192.9 102.4,186.9 106.2,183.7 C110.0,180.4 116.9,180.9 121.4,178.3 C125.8,175.7 128.4,168.9 133.0,168.0 C137.6,167.1 143.7,171.2 149.1,172.7 C154.5,174.3 164.3,178.2 165.3,177.5 C166.3,176.8 158.5,172.2 155.1,168.8 C151.7,165.4 145.5,161.3 145.0,156.9 C144.5,152.5 151.4,147.4 152.0,142.4 C152.6,137.3 148.1,131.3 148.6,126.5 C149.2,121.7 151.9,117.5 155.0,113.3 C158.1,109.2 167.0,103.7 167.2,101.7 C167.4,99.7 160.1,99.9 156.4,101.3 C152.8,102.7 148.4,110.9 145.5,110.0 C142.6,109.2 138.7,100.9 139.0,96.4 C139.3,91.9 144.3,87.3 147.6,83.0 C150.9,78.7 158.8,74.2 159.0,70.7 C159.2,67.2 151.8,60.9 149.1,62.0 C146.3,63.1 145.7,73.7 142.4,77.4 C139.1,81.2 133.3,84.9 129.4,84.5 C125.4,84.1 120.6,79.5 118.7,75.2 C116.7,70.8 117.9,64.0 117.5,58.4 C117.1,52.8 116.7,47.2 116.3,41.6 C115.9,36.0 115.6,30.4 115.2,24.8 C114.8,19.2 116.6,9.4 114.0,8.0 Z"/></symbol>
+    <symbol id="userSplat10" viewBox="0 0 188 145"><path fill="#0111d5" d="M164.0,29.0 C163.0,27.8 154.5,30.1 149.8,30.6 C145.1,31.2 140.1,32.6 135.6,32.2 C131.1,31.9 125.8,31.1 122.8,28.5 C119.8,25.9 119.1,19.4 117.5,16.7 C115.9,13.9 115.5,11.1 113.2,12.1 C110.8,13.1 107.3,21.4 103.4,22.5 C99.6,23.7 94.1,19.5 89.9,19.0 C85.8,18.5 81.4,17.5 78.4,19.6 C75.5,21.7 75.5,30.8 72.4,31.6 C69.3,32.5 64.0,27.0 59.8,24.7 C55.7,22.4 49.9,17.7 47.3,17.8 C44.7,18.0 42.7,23.2 44.2,25.8 C45.7,28.3 53.3,30.4 56.4,33.3 C59.4,36.2 62.7,39.6 62.3,43.0 C62.0,46.5 58.0,52.0 54.3,54.0 C50.7,56.0 45.1,54.8 40.4,55.0 C35.6,55.2 30.7,54.6 26.1,55.0 C21.4,55.4 15.0,55.1 12.4,57.2 C9.8,59.4 8.7,65.9 10.5,67.8 C12.4,69.7 19.0,69.3 23.5,68.9 C28.0,68.5 32.8,65.8 37.4,65.4 C42.0,65.0 48.1,64.6 51.1,66.7 C54.0,68.8 53.7,74.0 55.0,78.1 C56.3,82.3 58.5,87.3 59.0,91.5 C59.4,95.8 59.4,99.8 57.8,103.8 C56.1,107.7 49.1,113.0 49.3,115.3 C49.5,117.5 56.2,119.1 58.9,117.3 C61.5,115.5 62.6,106.1 65.3,104.5 C67.9,102.9 73.9,104.9 74.9,107.5 C75.9,110.2 72.3,116.1 71.2,120.3 C70.0,124.4 67.1,130.7 68.0,132.6 C69.0,134.4 74.6,133.9 76.8,131.4 C78.9,128.9 78.7,121.8 80.9,117.7 C83.1,113.6 86.1,108.6 89.8,107.1 C93.5,105.5 100.7,105.9 103.0,108.5 C105.4,111.1 102.2,119.1 103.9,122.8 C105.6,126.4 110.7,130.8 113.2,130.5 C115.8,130.2 119.1,124.8 119.1,121.0 C119.2,117.2 113.4,111.5 113.6,107.8 C113.8,104.1 117.3,100.1 120.6,98.5 C123.8,96.9 129.1,97.0 133.1,98.3 C137.1,99.6 141.2,103.1 144.7,106.2 C148.2,109.3 151.0,113.3 154.2,116.9 C157.3,120.4 160.4,126.3 163.6,127.6 C166.8,128.8 173.2,126.5 173.5,124.4 C173.9,122.2 169.0,117.6 165.7,114.7 C162.3,111.8 157.3,109.9 153.6,107.0 C149.9,104.0 146.3,100.7 143.5,97.2 C140.6,93.6 137.0,89.6 136.5,85.6 C136.0,81.6 137.4,74.8 140.4,73.3 C143.4,71.8 149.7,75.4 154.4,76.4 C159.0,77.4 164.2,78.9 168.3,79.4 C172.5,80.0 179.1,81.0 179.2,79.8 C179.3,78.6 173.1,74.1 169.1,72.4 C165.0,70.6 159.4,71.0 155.1,69.5 C150.7,67.9 146.0,66.1 143.0,63.0 C140.0,59.9 137.2,54.4 137.0,50.8 C136.9,47.2 139.0,43.6 142.2,41.4 C145.3,39.2 152.4,39.9 156.0,37.8 C159.6,35.7 165.0,30.2 164.0,29.0 Z"/></symbol>
+    <symbol id="userSplat11" viewBox="0 0 164 181"><path fill="#d80393" d="M110.0,8.0 C108.3,7.1 102.3,12.6 100.4,16.3 C98.5,20.1 99.2,25.7 98.6,30.4 C98.0,35.2 97.8,40.0 96.7,44.6 C95.6,49.1 94.7,54.7 91.8,57.7 C89.0,60.6 83.4,62.1 79.6,62.1 C75.9,62.1 71.7,60.7 69.2,57.7 C66.8,54.7 67.1,46.8 64.7,44.2 C62.4,41.6 56.2,40.5 54.9,42.2 C53.6,44.0 56.0,50.3 56.9,54.6 C57.7,58.8 61.6,64.6 60.1,67.7 C58.6,70.7 51.8,73.1 47.7,73.0 C43.5,72.9 39.3,69.6 35.3,67.3 C31.4,64.9 26.9,58.7 24.0,58.7 C21.1,58.7 16.8,64.8 17.9,67.3 C19.0,69.7 26.8,70.7 30.4,73.2 C34.1,75.8 39.9,80.0 39.9,82.5 C39.9,85.0 34.3,88.3 30.5,88.4 C26.7,88.5 19.8,82.6 17.3,83.0 C14.9,83.3 13.8,88.4 15.8,90.6 C17.7,92.7 25.2,93.6 28.9,96.0 C32.6,98.5 35.6,101.5 37.7,105.3 C39.8,109.1 40.9,114.8 41.3,119.1 C41.8,123.3 42.7,127.7 40.4,130.6 C38.1,133.5 31.8,134.5 27.4,136.5 C23.1,138.4 17.5,139.2 14.5,142.3 C11.5,145.4 8.5,152.7 9.5,155.1 C10.6,157.5 17.0,157.8 20.8,156.7 C24.7,155.6 28.6,151.3 32.5,148.6 C36.4,145.8 40.0,142.5 44.1,140.4 C48.3,138.3 53.2,135.7 57.2,136.1 C61.3,136.5 67.5,139.5 68.7,142.9 C69.9,146.3 65.8,151.9 64.4,156.4 C62.9,161.0 59.1,168.2 60.0,170.0 C60.9,171.7 67.0,169.6 69.5,166.9 C72.0,164.2 72.8,157.3 75.0,153.8 C77.1,150.2 78.9,145.9 82.3,145.6 C85.6,145.4 91.4,152.4 95.0,152.0 C98.7,151.6 101.0,146.2 104.1,143.3 C107.2,140.4 109.7,135.5 113.6,134.5 C117.5,133.6 125.8,138.5 127.5,137.5 C129.2,136.4 124.0,132.1 123.5,128.3 C123.0,124.5 122.8,118.6 124.4,114.8 C126.1,110.9 129.7,107.3 133.5,105.1 C137.3,102.8 143.5,103.6 147.2,101.3 C150.9,99.1 156.5,92.6 155.8,91.6 C155.1,90.5 147.4,93.8 143.0,95.0 C138.6,96.3 133.1,100.1 129.4,99.3 C125.7,98.4 122.7,93.7 121.0,90.0 C119.2,86.2 117.7,80.6 118.8,76.6 C120.0,72.6 124.7,69.5 127.9,66.1 C131.1,62.6 135.9,59.8 138.0,56.0 C140.0,52.2 141.8,44.2 140.2,43.4 C138.7,42.6 132.0,48.0 128.7,51.2 C125.4,54.4 123.4,59.6 120.5,62.8 C117.6,66.1 114.5,70.8 111.3,70.7 C108.2,70.6 103.5,66.0 101.8,62.2 C100.2,58.4 100.8,52.6 101.3,48.0 C101.7,43.4 103.0,39.0 104.5,34.6 C106.1,30.2 109.8,26.2 110.7,21.8 C111.6,17.3 111.7,8.9 110.0,8.0 Z"/></symbol>
+    <symbol id="userSplat43" viewBox="0 0 181 152"><path fill="#dfce06" d="M173.0,45.0 C172.1,42.5 163.9,41.4 159.2,41.1 C154.6,40.7 149.7,42.2 145.0,42.8 C140.3,43.4 135.2,44.8 130.8,44.7 C126.4,44.6 121.4,44.5 118.8,42.1 C116.2,39.7 113.8,33.8 115.1,30.3 C116.3,26.8 123.8,24.8 126.1,21.2 C128.5,17.6 130.3,9.8 129.1,8.7 C127.8,7.7 121.7,12.0 118.5,15.0 C115.3,18.0 113.2,24.7 109.9,26.5 C106.6,28.2 102.1,27.2 98.9,25.4 C95.7,23.6 93.9,15.9 90.7,15.5 C87.4,15.1 83.3,21.4 79.4,22.9 C75.5,24.4 71.0,25.7 67.1,24.5 C63.2,23.3 57.4,15.0 55.8,15.6 C54.2,16.2 58.2,24.1 57.3,28.1 C56.5,32.0 54.0,37.0 50.7,39.3 C47.4,41.6 42.0,41.6 37.4,42.0 C32.9,42.4 27.1,40.8 23.1,42.0 C19.2,43.2 13.0,47.6 13.7,48.9 C14.4,50.3 22.7,49.7 27.2,50.0 C31.8,50.3 38.3,48.1 41.1,50.5 C43.9,53.0 44.1,60.3 43.8,64.6 C43.5,69.0 42.2,73.3 39.5,76.5 C36.7,79.8 31.7,81.9 27.5,84.0 C23.3,86.1 17.1,87.0 14.2,89.3 C11.4,91.6 8.9,97.3 10.5,98.0 C12.1,98.7 19.4,95.8 23.6,93.8 C27.8,91.8 31.7,87.3 35.7,86.0 C39.6,84.8 45.0,84.3 47.3,86.3 C49.7,88.3 50.0,93.8 49.7,98.0 C49.4,102.2 47.8,107.7 45.4,111.6 C42.9,115.5 38.4,118.1 35.0,121.5 C31.6,124.8 26.5,128.1 24.9,131.5 C23.3,134.9 23.5,141.1 25.4,141.7 C27.3,142.3 33.3,138.3 36.3,135.1 C39.3,132.0 41.0,126.8 43.4,122.7 C45.8,118.5 47.7,114.0 50.7,110.4 C53.7,106.8 57.3,101.8 61.4,101.1 C65.4,100.4 72.1,103.5 74.8,106.1 C77.6,108.7 77.3,112.5 77.9,116.5 C78.5,120.6 76.5,127.9 78.5,130.2 C80.4,132.5 87.8,132.5 89.5,130.2 C91.2,127.9 87.8,120.4 88.6,116.3 C89.5,112.1 91.3,106.7 94.5,105.3 C97.8,104.0 104.7,105.8 108.2,108.3 C111.7,110.9 112.8,117.0 115.5,120.7 C118.2,124.4 122.5,130.5 124.5,130.6 C126.4,130.6 128.3,124.3 127.2,121.0 C126.0,117.6 119.1,114.2 117.4,110.5 C115.6,106.8 115.0,99.9 116.8,98.6 C118.7,97.3 124.7,100.6 128.3,102.5 C131.9,104.4 136.7,110.0 138.3,109.9 C140.0,109.8 139.8,105.1 138.1,102.1 C136.3,99.1 129.8,95.9 127.9,91.9 C126.1,88.0 126.8,83.1 126.7,78.4 C126.7,73.8 126.1,68.0 127.7,64.1 C129.3,60.3 132.6,56.7 136.4,55.2 C140.2,53.6 145.7,54.7 150.4,54.8 C155.1,55.0 160.9,57.5 164.7,55.9 C168.5,54.3 173.9,47.5 173.0,45.0 Z"/></symbol>
+  </defs>
+  <use href="#userSplat35" x="50" y="50" width="200" height="200" opacity="0.15" transform="rotate(-20 150 150)"/>
+  <use href="#userSplat29" x="500" y="20" width="250" height="250" opacity="0.15" transform="rotate(15 625 145)"/>
+  <use href="#userSplat10" x="1000" y="80" width="220" height="220" opacity="0.15" transform="rotate(-40 1110 190)"/>
+  <use href="#userSplat11" x="80" y="350" width="240" height="240" opacity="0.15" transform="rotate(30 200 470)"/>
+  <use href="#userSplat43" x="550" y="400" width="200" height="200" opacity="0.15" transform="rotate(-10 650 500)"/>
+  <use href="#userSplat35" x="1050" y="350" width="260" height="260" opacity="0.15" transform="rotate(45 1180 480)"/>
+  <use href="#userSplat29" x="150" y="700" width="200" height="200" opacity="0.15" transform="rotate(-60 250 800)"/>
+  <use href="#userSplat10" x="600" y="750" width="220" height="220" opacity="0.15" transform="rotate(25 710 860)"/>
+  <use href="#userSplat11" x="1100" y="650" width="240" height="240" opacity="0.15" transform="rotate(-25 1220 770)"/>
+</svg>
+
+<button class="sidebar-reopen-btn" id="sidebarReopenBtn" title="サイドバーを開く">☰</button>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+      <div class="sidebar-header">
+        <button class="home-link" id="homeLink" title="ホームにもどる">
+          <svg class="logo-squid" viewBox="0 0 100 100">
+            <ellipse cx="50" cy="42" rx="30" ry="26" fill="#ff2d78" stroke="#1a1a22" stroke-width="3"/>
+            <path d="M25,55 Q20,80 12,88 Q22,86 28,78 Q30,88 34,92 Q38,84 38,74 Q44,86 50,90 Q54,80 50,70 Q58,84 64,86 Q64,76 60,68 Q68,80 76,82 Q74,68 65,58" fill="#ff2d78" stroke="#1a1a22" stroke-width="3" stroke-linejoin="round"/>
+            <circle cx="40" cy="38" r="6" fill="#1a1a22"/>
+            <circle cx="62" cy="38" r="6" fill="#1a1a22"/>
+            <circle cx="42" cy="36" r="2" fill="#fff"/>
+            <circle cx="64" cy="36" r="2" fill="#fff"/>
+          </svg>
+          <div>
+            <div class="logo-text">TASK MAP</div>
+            <div class="logo-sub">はぐれない作戦会議</div>
+          </div>
+        </button>
+        <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="サイドバーを閉じる">«</button>
+      </div>
+
+      <button class="new-task-btn" id="newTaskBtn">＋ 新規タスク</button>
+
+      <div class="sidebar-section-label">最近のタスク</div>
+      <div class="recent-list" id="recentList"></div>
+
+      <div class="sidebar-footer">
+        <button class="delete-all-btn" id="deleteAllBtn">🗑 Delete All</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar" id="topbar" style="display:none;">
+      <span class="task-title" id="taskTitle" contenteditable="true" spellcheck="false"></span>
+      <div class="topbar-meta">
+        <div class="progress-wrap">
+          <span id="progressLabel">0 / 0 完了</span>
+          <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        </div>
+        <div class="current-trail" id="currentTrail"></div>
+      </div>
+    </div>
+
+    <div class="canvas-wrap" id="canvasWrap">
+      <div class="canvas-inner" id="canvasInner">
+        <div class="empty-state" id="emptyState">
+          <svg viewBox="0 0 100 100">
+            <ellipse cx="50" cy="42" rx="30" ry="26" fill="#00e5c8" stroke="#1a1a22" stroke-width="3"/>
+            <path d="M25,55 Q20,80 12,88 Q22,86 28,78 Q30,88 34,92 Q38,84 38,74 Q44,86 50,90 Q54,80 50,70 Q58,84 64,86 Q64,76 60,68 Q68,80 76,82 Q74,68 65,58" fill="#00e5c8" stroke="#1a1a22" stroke-width="3" stroke-linejoin="round"/>
+            <circle cx="40" cy="38" r="6" fill="#1a1a22"/>
+            <circle cx="62" cy="38" r="6" fill="#1a1a22"/>
+          </svg>
+          <h2>まだタスクがありません</h2>
+          <p>左の「＋ 新規タスク」から、達成したいゴールを1つ入力してください。<br>そこから枝を伸ばすように、やることを分解していきましょう。</p>
+        </div>
+        <ul class="tree" id="treeRoot" style="display:none;"></ul>
+      </div>
+    </div>
+
+    <div class="zoom-controls">
+      <button id="zoomOut" title="縮小">－</button>
+      <span class="zoom-label" id="zoomLabel">100%</span>
+      <button id="zoomIn" title="拡大">＋</button>
+      <button id="zoomReset" title="リセット">⟲</button>
+    </div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <h3>新しいタスクのゴールは？</h3>
+    <input type="text" id="modalInput" placeholder="例: 引っ越し準備を終わらせる" maxlength="60">
+    <div class="modal-actions">
+      <button class="btn-cancel" id="modalCancel">キャンセル</button>
+      <button class="btn-confirm" id="modalConfirm">作成する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_KEY = "taskmap_v1_tasks";
+  var ACTIVE_KEY = "taskmap_v1_active";
+  var SIDEBAR_KEY = "taskmap_v1_sidebar_collapsed";
+  var LEVEL_COLORS = ["#ff2d78","#00e5c8","#c6ff3d","#9b4dff","#ff6b4a","#ffe135"];
+
+  var state = {
+    tasks: [],
+    activeId: null
+  };
+
+  function uid(){
+    if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return 'id-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+  }
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      state.tasks = raw ? JSON.parse(raw) : [];
+    }catch(e){ state.tasks = []; }
+    state.activeId = localStorage.getItem(ACTIVE_KEY) || null;
+    if(state.activeId && !state.tasks.find(function(t){return t.id===state.activeId;})){
+      state.activeId = null;
+    }
+    if(!state.activeId && state.tasks.length){
+      state.activeId = state.tasks.slice().sort(function(a,b){return b.updatedAt-a.updatedAt;})[0].id;
+    }
+  }
+
+  function save(){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.tasks));
+    if(state.activeId) localStorage.setItem(ACTIVE_KEY, state.activeId);
+  }
+
+  function getActiveTask(){
+    return state.tasks.find(function(t){ return t.id === state.activeId; }) || null;
+  }
+
+  function findNode(node, id){
+    if(node.id === id) return node;
+    for(var i=0;i<node.children.length;i++){
+      var found = findNode(node.children[i], id);
+      if(found) return found;
+    }
+    return null;
+  }
+
+  function findParent(node, id, parent){
+    if(node.id === id) return parent;
+    for(var i=0;i<node.children.length;i++){
+      var found = findParent(node.children[i], id, node);
+      if(found) return found;
+    }
+    return null;
+  }
+
+  function findPath(node, id, path){
+    path = path || [];
+    path.push(node);
+    if(node.id === id) return path.slice();
+    for(var i=0;i<node.children.length;i++){
+      var res = findPath(node.children[i], id, path);
+      if(res) return res;
+    }
+    path.pop();
+    return null;
+  }
+
+  function countNodes(node, acc){
+    acc = acc || {total:0, done:0};
+    acc.total++;
+    if(node.done) acc.done++;
+    node.children.forEach(function(c){ countNodes(c, acc); });
+    return acc;
+  }
+
+  function timeAgo(ts){
+    var diff = Date.now() - ts;
+    var min = Math.floor(diff/60000);
+    if(min < 1) return "たった今";
+    if(min < 60) return min + "分前";
+    var hr = Math.floor(min/60);
+    if(hr < 24) return hr + "時間前";
+    var day = Math.floor(hr/24);
+    if(day < 7) return day + "日前";
+    var d = new Date(ts);
+    return (d.getMonth()+1) + "/" + d.getDate();
+  }
+
+  /* ===== rendering ===== */
+
+  function renderSidebar(){
+    var list = document.getElementById("recentList");
+    list.innerHTML = "";
+    var sorted = state.tasks.slice().sort(function(a,b){ return b.updatedAt - a.updatedAt; });
+    if(!sorted.length){
+      var empty = document.createElement("div");
+      empty.className = "recent-empty";
+      empty.textContent = "まだタスクがありません。「＋ 新規タスク」から始めましょう。";
+      list.appendChild(empty);
+      return;
+    }
+    sorted.forEach(function(task){
+      var counts = countNodes(task.root);
+      var item = document.createElement("div");
+      item.className = "recent-item" + (task.id === state.activeId ? " active" : "");
+      var color = counts.total>0 && counts.done===counts.total ? "#c6ff3d" : "#00e5c8";
+      item.innerHTML =
+        '<span class="recent-dot" style="background:'+color+'"></span>' +
+        '<span class="recent-info">' +
+          '<div class="recent-title"></div>' +
+          '<div class="recent-meta">'+counts.done+'/'+counts.total+' 完了 ・ '+timeAgo(task.updatedAt)+'</div>' +
+        '</span>' +
+        '<button class="recent-del" title="削除">✕</button>';
+      item.querySelector(".recent-title").textContent = task.title;
+      item.addEventListener("click", function(e){
+        if(e.target.closest(".recent-del")) return;
+        state.activeId = task.id;
+        save();
+        resetPanZoom();
+        renderAll();
+      });
+      item.querySelector(".recent-del").addEventListener("click", function(e){
+        e.stopPropagation();
+        if(confirm('「'+task.title+'」を削除しますか？この操作は取り消せません。')){
+          state.tasks = state.tasks.filter(function(t){ return t.id !== task.id; });
+          if(state.activeId === task.id){
+            state.activeId = state.tasks.length ? state.tasks.slice().sort(function(a,b){return b.updatedAt-a.updatedAt;})[0].id : null;
+            resetPanZoom();
+          }
+          save();
+          renderAll();
+        }
+      });
+      list.appendChild(item);
+    });
+  }
+
+  function buildNodeLi(node, task, depth){
+    var li = document.createElement("li");
+    if(node.collapsed) li.classList.add("collapsed");
+
+    var wrap = document.createElement("div");
+    wrap.className = "node-wrap";
+
+    var card = document.createElement("div");
+    card.className = "node-card" + (node.done ? " done" : "") + (task.currentNodeId === node.id ? " current" : "");
+    card.style.background = LEVEL_COLORS[depth % LEVEL_COLORS.length];
+
+    if(task.currentNodeId === node.id){
+      var pin = document.createElement("div");
+      pin.className = "pin-badge";
+      pin.textContent = "📍";
+      pin.title = "現在地";
+      card.appendChild(pin);
+    }
+
+    var textEl = document.createElement("div");
+    textEl.className = "node-text";
+    textEl.contentEditable = "true";
+    textEl.spellcheck = false;
+    textEl.textContent = node.text;
+
+    textEl.addEventListener("paste", function(e) {
+      e.preventDefault();
+      var text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      var range = window.getSelection().getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(document.createTextNode(text));
+    });
+
+    textEl.addEventListener("blur", function(){
+      var v = textEl.textContent.trim();
+      node.text = v || "(無題のステップ)";
+      textEl.textContent = node.text;
+      task.updatedAt = Date.now();
+      save();
+      renderSidebar();
+      renderTopbar(task);
+    });
+    
+    textEl.addEventListener("keydown", function(e){
+      if(e.isComposing) return;
+      if(e.key === "Enter"){ 
+        e.preventDefault();
+        e.target.blur();
+      }
+    });
+    card.appendChild(textEl);
+    wrap.appendChild(card);
+
+    if(node.children.length){
+      var toggle = document.createElement("div");
+      toggle.className = "collapse-toggle";
+      toggle.textContent = node.collapsed ? "＋" : "－";
+      toggle.title = node.collapsed ? "展開" : "折りたたむ";
+      toggle.addEventListener("click", function(){
+        node.collapsed = !node.collapsed;
+        save();
+        renderCanvas();
+      });
+      wrap.appendChild(toggle);
+    }
+
+    var actions = document.createElement("div");
+    actions.className = "node-actions";
+
+    var addBtn = document.createElement("button");
+    addBtn.className = "node-btn";
+    addBtn.textContent = "＋";
+    addBtn.title = "子ステップを追加";
+    addBtn.addEventListener("click", function(){
+      showAddChildInput(wrap, node, task);
+    });
+    actions.appendChild(addBtn);
+
+    var doneBtn = document.createElement("button");
+    doneBtn.className = "node-btn";
+    doneBtn.textContent = "✓";
+    doneBtn.title = "完了にする / 戻す";
+    doneBtn.addEventListener("click", function(){
+      node.done = !node.done;
+      task.updatedAt = Date.now();
+      save();
+      renderAll();
+    });
+    actions.appendChild(doneBtn);
+
+    var pinBtn = document.createElement("button");
+    pinBtn.className = "node-btn";
+    pinBtn.textContent = "📍";
+    pinBtn.title = "ここを現在地にする";
+    pinBtn.addEventListener("click", function(){
+      task.currentNodeId = node.id;
+      task.updatedAt = Date.now();
+      save();
+      renderAll();
+    });
+    actions.appendChild(pinBtn);
+
+    if(depth > 0){
+      var delBtn = document.createElement("button");
+      delBtn.className = "node-btn danger";
+      delBtn.textContent = "🗑";
+      delBtn.title = "このステップを削除";
+      delBtn.addEventListener("click", function(){
+        if(confirm('「'+node.text+'」とその下のステップをすべて削除しますか？')){
+          var parent = findParent(task.root, node.id, null);
+          if(parent){
+            parent.children = parent.children.filter(function(c){ return c.id !== node.id; });
+            if(task.currentNodeId === node.id) task.currentNodeId = task.root.id;
+            task.updatedAt = Date.now();
+            save();
+            renderAll();
+          }
+        }
+      });
+      actions.appendChild(delBtn);
+    }
+
+    wrap.appendChild(actions);
+    li.appendChild(wrap);
+
+    if(node.children.length && !node.collapsed){
+      var ul = document.createElement("ul");
+      node.children.forEach(function(child){
+        ul.appendChild(buildNodeLi(child, task, depth+1));
+      });
+      li.appendChild(ul);
+    }
+
+    return li;
+  }
+
+  function showAddChildInput(wrap, node, task){
+    var existing = wrap.querySelector(".add-child-input");
+    if(existing){ existing.querySelector("input").focus(); return; }
+    var box = document.createElement("div");
+    box.className = "add-child-input";
+    box.innerHTML = '<input type="text" placeholder="次にやること" maxlength="60"><button>追加</button>';
+    var input = box.querySelector("input");
+    var btn = box.querySelector("button");
+    function commit(){
+      var v = input.value.trim();
+      if(v){
+        node.children.push({ id: uid(), text: v, done:false, collapsed:false, children:[] });
+        node.collapsed = false;
+        task.updatedAt = Date.now();
+        save();
+        renderAll();
+      } else {
+        box.remove();
+      }
+    }
+    btn.addEventListener("click", commit);
+    input.addEventListener("keydown", function(e){
+      if(e.isComposing) return;
+      if(e.key === "Enter") commit();
+      if(e.key === "Escape") box.remove();
+    });
+    wrap.appendChild(box);
+    input.focus();
+  }
+
+  function renderTopbar(task){
+    var topbar = document.getElementById("topbar");
+    if(!task){ topbar.style.display = "none"; return; }
+    topbar.style.display = "block";
+
+    var titleEl = document.getElementById("taskTitle");
+    titleEl.textContent = task.title;
+    titleEl.onblur = function(){
+      var v = titleEl.textContent.trim();
+      task.title = v || "無題のタスク";
+      titleEl.textContent = task.title;
+      task.updatedAt = Date.now();
+      save();
+      renderSidebar();
+    };
+    
+    titleEl.onpaste = function(e){
+      e.preventDefault();
+      var text = (e.clipboardData || window.clipboardData).getData('text/plain');
+      var range = window.getSelection().getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(document.createTextNode(text));
+    };
+
+    titleEl.onkeydown = function(e){
+      if(e.isComposing) return;
+      if(e.key === "Enter"){ 
+        e.preventDefault();
+        e.target.blur();
+      }
+    };
+
+    var counts = countNodes(task.root);
+    document.getElementById("progressLabel").textContent = counts.done + " / " + counts.total + " 完了";
+    var pct = counts.total ? Math.round(counts.done/counts.total*100) : 0;
+    document.getElementById("progressFill").style.width = pct + "%";
+
+    var trailEl = document.getElementById("currentTrail");
+    var path = findPath(task.root, task.currentNodeId);
+    if(path && path.length){
+      trailEl.innerHTML = '<b>現在地 📍</b>';
+      path.forEach(function(n, i){
+        var seg = document.createElement("span");
+        seg.className = "trail-seg";
+        seg.textContent = n.text;
+        trailEl.appendChild(seg);
+        if(i < path.length-1){
+          var arrow = document.createElement("span");
+          arrow.textContent = "→";
+          trailEl.appendChild(arrow);
+        }
+      });
+    } else {
+      trailEl.innerHTML = "";
+    }
+  }
+
+  function renderCanvas(){
+    var task = getActiveTask();
+    var emptyState = document.getElementById("emptyState");
+    var treeRoot = document.getElementById("treeRoot");
+
+    if(!task){
+      emptyState.style.display = "flex";
+      treeRoot.style.display = "none";
+      return;
+    }
+    emptyState.style.display = "none";
+    treeRoot.style.display = "flex";
+    treeRoot.innerHTML = "";
+    treeRoot.appendChild(buildNodeLi(task.root, task, 0));
+  }
+
+  function renderAll(){
+    var task = getActiveTask();
+    renderSidebar();
+    renderTopbar(task);
+    renderCanvas();
+  }
+
+  /* ===== new task modal ===== */
+
+  function openModal(){
+    document.getElementById("modalOverlay").classList.add("open");
+    var input = document.getElementById("modalInput");
+    input.value = "";
+    setTimeout(function(){ input.focus(); }, 50);
+  }
+  function closeModal(){
+    document.getElementById("modalOverlay").classList.remove("open");
+  }
+  function confirmNewTask(){
+    var input = document.getElementById("modalInput");
+    var v = input.value.trim();
+    if(!v) { input.focus(); return; }
+    var rootId = uid();
+    var task = {
+      id: uid(),
+      title: v,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      currentNodeId: rootId,
+      root: { id: rootId, text: v, done:false, collapsed:false, children:[] }
+    };
+    state.tasks.push(task);
+    state.activeId = task.id;
+    save();
+    closeModal();
+    resetPanZoom();
+    renderAll();
+  }
+
+  /* ===== sidebar collapse/expand ===== */
+  function setSidebarCollapsed(collapsed){
+    document.body.classList.toggle("sidebar-collapsed", collapsed);
+    localStorage.setItem(SIDEBAR_KEY, collapsed ? "1" : "0");
+  }
+  function initSidebarState(){
+    var stored = localStorage.getItem(SIDEBAR_KEY);
+    var collapsed = stored !== null ? stored === "1" : window.innerWidth <= 760;
+    setSidebarCollapsed(collapsed);
+  }
+
+  /* ===== Pan & Zoom System (無限キャンバス / 滑らかズーム / カーソル追従) ===== */
+  var targetZoom = 1, zoomLevel = 1;
+  var targetPanX = 0, targetPanY = -120;
+  var panX = 0, panY = -120;
+  var ZOOM_MIN = 0.1, ZOOM_MAX = 4.0, ZOOM_STEP = 0.15;
+  var isDragging = false;
+  var lastMouseX, lastMouseY;
+  var isAnimating = false;
+
+  function clamp(v, min, max){ return Math.min(max, Math.max(min, v)); }
+
+  // 60fpsで滑らかに目標値へ補間（Lerp）するアニメーションループ
+  function loop() {
+    var dz = targetZoom - zoomLevel;
+    var dx = targetPanX - panX;
+    var dy = targetPanY - panY;
+
+    // 許容誤差を極限まで小さくして、ピタッと止まるまで滑らかに処理
+    if (Math.abs(dz) < 0.0001 && Math.abs(dx) < 0.05 && Math.abs(dy) < 0.05) {
+      zoomLevel = targetZoom;
+      panX = targetPanX;
+      panY = targetPanY;
+      applyTransformToDOM();
+      isAnimating = false;
+      return;
+    }
+
+    // 【修正点①】X, Y, Zoomの追従速度を完全に同じ値に統一（ズレによる視覚的なブレを解消）
+    var ease = 0.12;
+    zoomLevel += dz * ease;
+    panX += dx * ease;
+    panY += dy * ease;
+
+    applyTransformToDOM();
+    requestAnimationFrame(loop);
+  }
+
+  function applyTransformToDOM() {
+    var inner = document.getElementById("canvasInner");
+    if(inner) {
+      // 【修正点②】translate3dを使用してハードウェアアクセラレーション（GPU）を強制し、サブピクセルのカクつきを防ぐ
+      inner.style.transform = "translate3d(calc(-50% + " + panX + "px), calc(-50% + " + panY + "px), 0) scale(" + zoomLevel + ")";
+    }
+  }
+
+  function triggerAnimation() {
+    document.getElementById("zoomLabel").textContent = Math.round(targetZoom * 100) + "%";
+    if (!isAnimating) {
+      isAnimating = true;
+      requestAnimationFrame(loop);
+    }
+  }
+
+  function setZoomCenter(newZoom, cx, cy) {
+    newZoom = clamp(newZoom, ZOOM_MIN, ZOOM_MAX);
+    if (newZoom === targetZoom) return;
+
+    if (cx !== undefined && cy !== undefined) {
+      targetPanX = cx - (cx - targetPanX) * (newZoom / targetZoom);
+      targetPanY = cy - (cy - targetPanY) * (newZoom / targetZoom);
+    }
+
+    targetZoom = newZoom;
+    triggerAnimation();
+  }
+
+  function setZoom(v) {
+    setZoomCenter(v, 0, 0); 
+  }
+
+  function resetPanZoom(){
+    targetZoom = 1;
+    targetPanX = 0;
+    targetPanY = -120;
+    triggerAnimation();
+  }
+
+  var canvasWrap = document.getElementById("canvasWrap");
+  canvasWrap.addEventListener("mousedown", function(e){
+    if(e.button !== 1 && e.target.closest(".node-text, button, input, .add-child-input, .collapse-toggle")) return;
+    
+    if(e.button === 0 || e.button === 1){
+      if(e.button === 1) e.preventDefault();
+      isDragging = true;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+      canvasWrap.classList.add("dragging");
+    }
+  });
+
+  window.addEventListener("mousemove", function(e){
+    if(!isDragging) return;
+    var dx = e.clientX - lastMouseX;
+    var dy = e.clientY - lastMouseY;
+    
+    targetPanX += dx;
+    targetPanY += dy;
+    panX += dx;
+    panY += dy;
+    
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+    triggerAnimation();
+  });
+
+  window.addEventListener("mouseup", function(e){
+    if(isDragging){
+      isDragging = false;
+      canvasWrap.classList.remove("dragging");
+    }
+  });
+
+  canvasWrap.addEventListener("wheel", function(e){
+    e.preventDefault();
+
+    var rect = canvasWrap.getBoundingClientRect();
+    var cx = e.clientX - rect.left - rect.width / 2;
+    var cy = e.clientY - rect.top - rect.height / 2;
+
+    // 【修正点③】一般的なマウスホイールの巨大な変化量を抑え込み、目標値の暴走を防ぐ
+    var delta = e.deltaY;
+    if (Math.abs(delta) >= 50) {
+      delta = (delta > 0 ? 1 : -1) * 50;
+    }
+
+    var zoomDelta = Math.exp(-delta * 0.003);
+    setZoomCenter(targetZoom * zoomDelta, cx, cy);
+
+  }, { passive:false });
+
+  /* ===== init ===== */
+  document.getElementById("newTaskBtn").addEventListener("click", openModal);
+  document.getElementById("modalCancel").addEventListener("click", closeModal);
+  document.getElementById("modalConfirm").addEventListener("click", confirmNewTask);
+  document.getElementById("modalInput").addEventListener("keydown", function(e){
+    if(e.isComposing) return;
+    if(e.key === "Enter") confirmNewTask();
+    if(e.key === "Escape") closeModal();
+  });
+  document.getElementById("modalOverlay").addEventListener("click", function(e){
+    if(e.target.id === "modalOverlay") closeModal();
+  });
+
+  document.getElementById("sidebarCollapseBtn").addEventListener("click", function(){ setSidebarCollapsed(true); });
+  document.getElementById("sidebarReopenBtn").addEventListener("click", function(){ setSidebarCollapsed(false); });
+
+  document.getElementById("homeLink").addEventListener("click", function(){
+    state.activeId = null;
+    renderAll();
+  });
+
+  document.getElementById("deleteAllBtn").addEventListener("click", function(){
+    if(!state.tasks.length) return;
+    if(confirm("すべてのタスクを削除しますか？この操作は取り消せません。")){
+      state.tasks = [];
+      state.activeId = null;
+      save();
+      renderAll();
+    }
+  });
+
+  document.getElementById("zoomIn").addEventListener("click", function(){ setZoom(targetZoom + ZOOM_STEP); });
+  document.getElementById("zoomOut").addEventListener("click", function(){ setZoom(targetZoom - ZOOM_STEP); });
+  document.getElementById("zoomReset").addEventListener("click", resetPanZoom);
+
+  window.addEventListener("keydown", function(e){
+    if((e.ctrlKey || e.metaKey) && (e.key === "+" || e.key === "=")){ e.preventDefault(); setZoom(targetZoom + ZOOM_STEP); }
+    if((e.ctrlKey || e.metaKey) && e.key === "-"){ e.preventDefault(); setZoom(targetZoom - ZOOM_STEP); }
+    if((e.ctrlKey || e.metaKey) && e.key === "0"){ e.preventDefault(); resetPanZoom(); }
+  });
+
+  initSidebarState();
+  load();
+  renderAll();
+  applyTransformToDOM(); // 初期位置セット
+})();
+</script>
+</body>
+</html>
