@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-05T13:53:33.558Z",
+  "updated": "2026-07-06T02:29:55.932Z",
   "python": [
     {
       "name": "mysite",
@@ -27,6 +27,15 @@
       "updated": "2026-07-05T01:55:07.224Z",
       "id": "DESIGN",
       "created": "2026-07-05T01:55:07.224Z"
+    },
+    {
+      "id": "博展",
+      "name": "博展",
+      "desc": "",
+      "path": "data/design/博展/DESIGN.md",
+      "images": [],
+      "created": "2026-07-06T02:29:53.559Z",
+      "updated": "2026-07-06T02:29:53.559Z"
     }
   ]
 }
