@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-06T02:34:23.770Z",
+  "updated": "2026-07-06T02:34:56.280Z",
   "python": [
     {
       "name": "mysite",
@@ -54,6 +54,15 @@
       "images": [],
       "created": "2026-07-06T02:34:22.725Z",
       "updated": "2026-07-06T02:34:22.725Z"
+    },
+    {
+      "id": "splatoon2",
+      "name": "Splatoon2",
+      "desc": "カラフルなインクのテーマ",
+      "path": "data/design/splatoon2/DESIGN.md",
+      "images": [],
+      "created": "2026-07-06T02:34:55.340Z",
+      "updated": "2026-07-06T02:34:55.340Z"
     }
   ]
 }
