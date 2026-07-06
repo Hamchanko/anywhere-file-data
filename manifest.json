@@ -1,5 +1,5 @@
 {
-  "updated": "2026-07-06T02:31:12.247Z",
+  "updated": "2026-07-06T02:33:04.719Z",
   "python": [
     {
       "name": "mysite",
@@ -30,12 +30,12 @@
     },
     {
       "id": "博展",
-      "name": "博展",
+      "name": "HAKUTEN",
       "desc": "白黒でクールなシンプルテーマ",
       "path": "data/design/博展/DESIGN.md",
       "images": [],
       "created": "2026-07-06T02:29:53.559Z",
-      "updated": "2026-07-06T02:31:10.205Z"
+      "updated": "2026-07-06T02:33:02.747Z"
     }
   ]
 }
